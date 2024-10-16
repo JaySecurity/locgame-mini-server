@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Generate Protobuf files" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="locgame-service" />
+    <working_directory value="$PROJECT_DIR$" />
+    <kind value="PACKAGE" />
+    <package value="locgame-mini-server/cmd/gen-proto" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$/cmd/gen-proto/gen-proto.go" />
+    <method v="2" />
+  </configuration>
+</component>

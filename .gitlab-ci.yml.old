@@ -1,0 +1,110 @@
+image: golang:1.18
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_API_VERSION: "1.39"
+
+stages:
+  - build
+  - deploy
+
+docker-build:
+  stage: build
+  image: docker:git
+  services:
+    - docker:18.09-dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - docker build --build-arg CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} --build-arg CI_COMMIT_SHA=${CI_COMMIT_SHA} --build-arg CI_PROJECT_URL=${CI_PROJECT_URL} --build-arg BUILD_NUMBER=${CI_PIPELINE_ID} -t "$CI_REGISTRY_IMAGE:$CI_BUILD_REF_NAME" .
+    - docker build -f cmd/locgame-jobs-service/build/Dockerfile --build-arg CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} --build-arg CI_COMMIT_SHA=${CI_COMMIT_SHA} --build-arg CI_PROJECT_URL=${CI_PROJECT_URL} --build-arg BUILD_NUMBER=${CI_PIPELINE_ID} -t "$CI_REGISTRY_IMAGE/jobs-service:$CI_BUILD_REF_NAME" .
+    - docker push "$CI_REGISTRY_IMAGE:$CI_BUILD_REF_NAME"
+    - docker push "$CI_REGISTRY_IMAGE/jobs-service:$CI_BUILD_REF_NAME"
+  only:
+    - web
+    - master
+    - tags
+  except:
+    - schedules
+
+deploy-dev:
+  stage: deploy
+  image: kroniak/ssh-client
+  script:
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | ssh-add -
+    - echo "export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" > env.sh
+    - echo "export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> env.sh
+    - echo "export BLOCKCHAIN_MINTER_PRIVATE_KEY=$BLOCKCHAIN_MINTER_PRIVATE_KEY_DEV" >> env.sh
+    - scp -o StrictHostKeyChecking=no -r deploy/ $SSH_ADDRESS_DEV:~/locg
+    - scp -o StrictHostKeyChecking=no env.sh $SSH_ADDRESS_DEV:~/locg/env.sh
+    - ssh $SSH_ADDRESS_DEV -o StrictHostKeyChecking=no "source ~/locg/env.sh && source ~/locg/deploy/functions.sh && locg_deploy development $CI_BUILD_REF_NAME"
+  dependencies: [ ]
+  environment:
+    name: development
+    url: https://development.locg.furylion.dev
+  only:
+    - master
+  except:
+    - schedules
+
+deploy-custom:
+  stage: deploy
+  image: kroniak/ssh-client
+  script:
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | ssh-add -
+    - scp -o StrictHostKeyChecking=no -r deploy/ $SSH_ADDRESS_DEV:~/locg
+    - ssh $SSH_ADDRESS_DEV -o StrictHostKeyChecking=no "source ~/locg/deploy/functions.sh && locg_deploy $CI_BUILD_REF_NAME $CI_BUILD_REF_NAME"
+  environment:
+    name: $CI_BUILD_REF_NAME
+    url: https://$CI_BUILD_REF_NAME.locg.furylion.dev
+    on_stop: stop_environment
+  dependencies: [ ]
+  only:
+    - web
+  except:
+    - master
+    - tags
+    - schedules
+
+stop_environment:
+  stage: deploy
+  image: kroniak/ssh-client
+  script:
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | ssh-add -
+    - scp -o StrictHostKeyChecking=no -r deploy/ $SSH_ADDRESS_DEV:~/locg
+    - ssh $SSH_ADDRESS_DEV -o StrictHostKeyChecking=no "source ~/locg/deploy/functions.sh && locg_delete_environment $CI_BUILD_REF_NAME"
+  environment:
+    name: $CI_BUILD_REF_NAME
+    action: stop
+  dependencies: [ ]
+  only:
+    - web
+  except:
+    - master
+    - tags
+    - schedules
+  when: manual
+
+#deploy-prod:
+#  stage: deploy
+#  image: kroniak/ssh-client
+#  script:
+#    - eval $(ssh-agent -s)
+#    - echo "$SSH_PRIVATE_KEY" | ssh-add -
+#    - echo "export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" > env.sh
+#    - echo "export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> env.sh
+#    - echo "export BLOCKCHAIN_MINTER_PRIVATE_KEY=$BLOCKCHAIN_MINTER_PRIVATE_KEY_PROD" >> env.sh
+#    - echo "export BLOCKCHAIN_COIN_MARKET_CAP_API_KEY=$BLOCKCHAIN_COIN_MARKET_CAP_API_KEY_PROD" >> env.sh
+#    - scp -o StrictHostKeyChecking=no -r deploy/ $SSH_ADDRESS_PROD:~/locg
+#    - scp -o StrictHostKeyChecking=no env.sh $SSH_ADDRESS_PROD:~/locg/env.sh
+#    - ssh $SSH_ADDRESS_PROD -o StrictHostKeyChecking=no "source ~/locg/deploy/functions.sh && locg_deploy production $CI_BUILD_REF_NAME"
+#  environment:
+#    name: production
+#    url: https://production.locg.furylion.dev
+#  dependencies: [ ]
+#  only:
+#    - tags
+#  except:
+#    - schedules

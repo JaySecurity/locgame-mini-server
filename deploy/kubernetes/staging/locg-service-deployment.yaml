@@ -1,0 +1,85 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: locg-service
+  namespace: locg-game-stg
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: locg-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: locg-service
+    spec:
+      containers:
+        - name: locg-service
+          image: 696215560370.dkr.ecr.eu-central-1.amazonaws.com/game-backend-staging:staging-206ec177
+          ports:
+            - name: ws-locg
+              containerPort: 8080
+          env:
+            - name: ENVIRONMENT
+              value: 'staging'
+            - name: BRANCH
+              value: 'staging'
+            - name: REDIS_HOST
+              value: 'locg-redis-master'
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: locg-redis
+                  key: redis-password
+                  optional: false
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: locg-secrets
+                  key: aws-access-key-id
+                  optional: false
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: locg-secrets
+                  key: aws-secret-access-key
+                  optional: false
+            - name: BLOCKCHAIN_MINTER_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: locg-secrets
+                  key: blockchain-minter-private-key
+                  optional: false
+            - name: PAYPAL_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: locg-secrets
+                  key: paypal-client-id
+                  optional: false
+            - name: PAYPAL_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: locg-secrets
+                  key: paypal-secret
+                  optional: false
+            - name: DATABASE_HOST
+              value: 'game-dev.icpjq.mongodb.net'
+            - name: DATABASE_DATABASE
+              value: 'locg_staging'
+            - name: DATABASE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: locg-secrets
+                  key: database-username
+                  optional: false
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: locg-secrets
+                  key: database-password
+                  optional: false
+            - name: NATS_ADDRESS
+              value: 'locg-nats:4222'
+      # imagePullSecrets:
+      #   - name: registry-credentials

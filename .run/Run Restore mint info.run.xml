@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run Restore mint info" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="locgame-service" />
+    <working_directory value="$PROJECT_DIR$" />
+    <kind value="PACKAGE" />
+    <package value="locgame-mini-server/cmd/restore-mint-info" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$/cmd/restore_mint_info/restore_mint_info.go" />
+    <method v="2" />
+  </configuration>
+</component>

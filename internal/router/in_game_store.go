@@ -1,0 +1,68 @@
+package router
+
+import (
+	"encoding/json"
+	"locgame-mini-server/pkg/log"
+	"net/http"
+)
+
+// func (r *Router) CreateOrder(client *network.Client, in *storeDto.OrderRequest) (*storeDto.OrderResponse, error) {
+// 	return r.InGameStore.CreateOrder(client.Context(), in)
+// }
+// func (r *Router) CreateUpgradeOrder(client *network.Client, in *storeDto.UpgradeRequest) (*storeDto.OrderResponse, error) {
+// 	return r.InGameStore.CreateUpgradeOrder(client.Context(), in)
+// }
+
+// func (r *Router) SendPaymentReceipt(client *network.Client, in *storeDto.Receipt) (*base.Empty, error) {
+// 	err := r.InGameStore.SetPaymentReceipt(client.Context(), in)
+// 	return &base.Empty{}, err
+// }
+
+// func (r *Router) OpenPack(client *network.Client, in *base.ObjectID) (*storeDto.OpenPackResponse, error) {
+// 	return r.InGameStore.OpenPack(client.Context(), in)
+// }
+
+// func (r *Router) GetUnopenedPacks(client *network.Client, _ *base.Empty) (*storeDto.Orders, error) {
+// 	orders, err := r.InGameStore.GetUnopenedPacks(client.Context())
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return &storeDto.Orders{Data: orders}, nil
+// }
+
+// func (r *Router) GetLoCGRate(_ *network.Client, _ *base.Empty) (*storeDto.LoCGConvertRate, error) {
+// 	return r.Payments.GetLoCGRate()
+// }
+
+// func (r *Router) GetInGameStoreData(client *network.Client, _ *base.Empty) (*storeDto.StoreData, error) {
+// 	return r.InGameStore.GetData(client.Context())
+// }
+
+// func (r *Router) SubmitPromoCode(client *network.Client, in *storeDto.PromoCodeSubmitRequest) (*storeDto.PromoCodeSubmitResponse, error) {
+// 	return r.InGameStore.SubmitPromoCode(client.Context(), in)
+// }
+
+// Store data route
+func (r *Router) HandleStoreRoutes() {
+	// Get Store Data
+	r.Mux.HandleFunc("/store", func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		data, err := r.InGameStore.GetData(req.Context())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		log.Debug("Store data:", data.Tokens[0].Available)
+		jsonData, err := json.Marshal(data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(jsonData)
+	})
+}

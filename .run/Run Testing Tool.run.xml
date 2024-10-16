@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run Testing Tool" type="GoApplicationRunConfiguration" factoryName="Go Application" singleton="false">
+    <module name="locgame-testing-tool" />
+    <working_directory value="$PROJECT_DIR$/../locgame-testing-tool" />
+    <kind value="PACKAGE" />
+    <package value="locgame-testing-tool/cmd" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$/../locgame-testing-tool/cmd/cmd.go" />
+    <method v="2" />
+  </configuration>
+</component>

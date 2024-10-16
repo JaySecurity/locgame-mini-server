@@ -1,0 +1,15 @@
+.idea
+.vscode
+.github
+.gitignore
+.gitmodules
+
+.gitlab-ci.yml
+.dockerignore
+.run
+.gitlab
+
+proto
+deploy
+README.md
+

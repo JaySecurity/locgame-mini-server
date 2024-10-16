@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run Jobs Service" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="locgame-service" />
+    <working_directory value="$PROJECT_DIR$" />
+    <kind value="PACKAGE" />
+    <package value="locgame-mini-server/cmd/locgame-jobs-service" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$/cmd/locgame-jobs-server/server.go" />
+    <method v="2" />
+  </configuration>
+</component>

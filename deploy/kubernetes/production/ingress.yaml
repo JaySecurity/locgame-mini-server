@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-locg-service
+  namespace: locg-prod
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: instance
+    alb.ingress.kubernetes.io/inbound-cidrs: '0.0.0.0/0'
+    alb.ingress.kubernetes.io/certificate-arn: 'arn:aws:acm:eu-central-1:696215560370:certificate/647df962-d1c5-4b01-808e-c8d79499d5f5'
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+
+spec:
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: locg-service
+                port:
+                  number: 8080

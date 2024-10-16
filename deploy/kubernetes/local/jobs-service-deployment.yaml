@@ -1,0 +1,85 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: locg-jobs-service
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: locg-jobs-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: locg-jobs-service
+    spec:
+      containers:
+        - name: locg-jobs-service
+          image: localhost:5000/locg-service/jobs-service:latest
+          imagePullPolicy: 'Always'
+          env:
+            - name: REDIS_HOST
+              value: 'locg-redis-headless'
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: locg-redis
+                  key: redis-password
+                  optional: false
+            - name: NATS_ADDRESS
+              value: 'locg-nats:4222'
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: locg-secrets
+                  key: aws-access-key-id
+                  optional: false
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: locg-secrets
+                  key: aws-secret-access-key
+                  optional: false
+            - name: BLOCKCHAIN_MINTER_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: locg-secrets
+                  key: blockchain-minter-private-key
+                  optional: false
+            - name: DATABASE_DATABASE
+              value: 'locg_development'
+            - name: DATABASE_HOST
+              value: 'mongo'
+            - name: DATABASE_PORT
+              value: '27017'
+            - name: DATABASE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-credentials
+                  key: username
+                  optional: false
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-credentials
+                  key: password
+                  optional: false
+#--- or you can use online database
+#
+#            - name: DATABASE_DATABASE
+#              value: 'locg_development'
+#            - name: DATABASE_HOST
+#              value: 'game-dev.icpjq.mongodb.net'
+#            - name: DATABASE_PORT
+#              value: '27017'
+#            - name: DATABASE_USERNAME
+#              valueFrom:
+#                secretKeyRef:
+#                  name: locg-secrets
+#                  key: database-username
+#                  optional: false
+#            - name: DATABASE_PASSWORD
+#              valueFrom:
+#                secretKeyRef:
+#                  name: locg-secrets
+#                  key: database-password
+#                  optional: false
