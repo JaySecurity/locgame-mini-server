@@ -16,23 +16,23 @@ import (
 	protobuf "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"
-	"locgame-mini-server/pkg/log"
-	"locgame-mini-server/pkg/dto/errors"
-	"locgame-mini-server/pkg/dto/options"
-	"locgame-mini-server/pkg/network"
+	"locgame-service/pkg/log"
+	"locgame-service/pkg/dto/errors"
+	"locgame-service/pkg/dto/options"
+	"locgame-service/pkg/network"
 
-	"locgame-mini-server/pkg/dto/accounts"
-	"locgame-mini-server/pkg/dto/arena"
-	"locgame-mini-server/pkg/dto/base"
-	"locgame-mini-server/pkg/dto/cards"
-	"locgame-mini-server/pkg/dto/friends"
-	"locgame-mini-server/pkg/dto/game"
-	"locgame-mini-server/pkg/dto/maintenance"
-	"locgame-mini-server/pkg/dto/matches"
-	"locgame-mini-server/pkg/dto/player"
-	"locgame-mini-server/pkg/dto/resources"
-	"locgame-mini-server/pkg/dto/store"
-	"locgame-mini-server/pkg/dto/tutorial"
+	"locgame-service/pkg/dto/accounts"
+	"locgame-service/pkg/dto/arena"
+	"locgame-service/pkg/dto/base"
+	"locgame-service/pkg/dto/cards"
+	"locgame-service/pkg/dto/friends"
+	"locgame-service/pkg/dto/game"
+	"locgame-service/pkg/dto/maintenance"
+	"locgame-service/pkg/dto/matches"
+	"locgame-service/pkg/dto/player"
+	"locgame-service/pkg/dto/resources"
+	"locgame-service/pkg/dto/store"
+	"locgame-service/pkg/dto/tutorial"
 )
 
 type ServerHandler struct {
@@ -84,7 +84,6 @@ type ServerRouter interface {
 	GetArenaConfigs(*network.Client, *base.Empty) (*arena.ArenaConfig, error)
 	GetInGameStoreData(*network.Client, *base.Empty) (*store.StoreData, error)
 	CreateOrder(*network.Client, *store.OrderRequest) (*store.OrderResponse, error)
-	SubmitPromoCode(*network.Client, *store.PromoCodeSubmitRequest) (*store.PromoCodeSubmitResponse, error)
 	SendPaymentReceipt(*network.Client, *store.Receipt) (*base.Empty, error)
 	OpenPack(*network.Client, *base.ObjectID) (*store.OpenPackResponse, error)
 	GetUnopenedPacks(*network.Client, *base.Empty) (*store.Orders, error)
@@ -100,7 +99,6 @@ type ServerRouter interface {
 	SendLoginEmail(*network.Client, *accounts.LoginEmailRequest) (*accounts.LoginEmailResponse, error)
 	VerifyLoginEmail(*network.Client, *accounts.VerifyLoginEmailRequest) (*accounts.LoginResponse, error)
 	SocialLogin(*network.Client, *accounts.VerifySocialLoginRequest) (*accounts.LoginResponse, error)
-	GetUserBalances(*network.Client, *accounts.AccountBalanceRequest) (*accounts.AccountBalanceResponse, error)
 	SetActiveWallet(*network.Client, *accounts.SetActiveWalletRequest) (*base.Empty, error)
 	QuickMatch(*network.Client, *matches.QuickMatchRequest) (*base.Empty, error)
 	GetOpponentsQuickMatch(*network.Client, *base.Empty) (*matches.QuickMatchList, error)
@@ -108,7 +106,6 @@ type ServerRouter interface {
 	AcceptQuickMatch(*network.Client, *matches.QuickMatchAccept) (*base.Empty, error)
 	DeclineQuickMatch(*network.Client, *matches.QuickMatchDecline) (*base.Empty, error)
 	CancelQuickMatch(*network.Client, *matches.QuickMatchCancel) (*base.Empty, error)
-	CreateUpgradeOrder(*network.Client, *store.UpgradeRequest) (*store.OrderResponse, error)
 }
 
 func NewServerHandler(router ServerRouter) *ServerHandler {
@@ -233,79 +230,70 @@ func NewServerHandler(router ServerRouter) *ServerHandler {
 			return router.CreateOrder(client, args.(*store.OrderRequest))
 		},
 		10039: func(client *network.Client, args interface{}) (protobuf.Message, error) {
-			return router.SubmitPromoCode(client, args.(*store.PromoCodeSubmitRequest))
-		},
-		10040: func(client *network.Client, args interface{}) (protobuf.Message, error) {
 			return router.SendPaymentReceipt(client, args.(*store.Receipt))
 		},
-		10041: func(client *network.Client, args interface{}) (protobuf.Message, error) {
+		10040: func(client *network.Client, args interface{}) (protobuf.Message, error) {
 			return router.OpenPack(client, args.(*base.ObjectID))
 		},
-		10042: func(client *network.Client, args interface{}) (protobuf.Message, error) {
+		10041: func(client *network.Client, args interface{}) (protobuf.Message, error) {
 			return router.GetUnopenedPacks(client, args.(*base.Empty))
 		},
-		10043: func(client *network.Client, args interface{}) (protobuf.Message, error) {
+		10042: func(client *network.Client, args interface{}) (protobuf.Message, error) {
 			return router.GetLoCGRate(client, args.(*base.Empty))
 		},
-		10044: func(client *network.Client, args interface{}) (protobuf.Message, error) {
+		10043: func(client *network.Client, args interface{}) (protobuf.Message, error) {
 			return router.Withdraw(client, args.(*resources.WithdrawRequest))
 		},
-		10045: func(client *network.Client, args interface{}) (protobuf.Message, error) {
+		10044: func(client *network.Client, args interface{}) (protobuf.Message, error) {
 			return router.SetAccountInfo(client, args.(*accounts.SetInfoRequest))
 		},
-		10046: func(client *network.Client, args interface{}) (protobuf.Message, error) {
+		10045: func(client *network.Client, args interface{}) (protobuf.Message, error) {
 			return router.CompleteTutorialStep(client, args.(*base.Empty))
 		},
-		10047: func(client *network.Client, args interface{}) (protobuf.Message, error) {
+		10046: func(client *network.Client, args interface{}) (protobuf.Message, error) {
 			return router.CompleteSoftTutorialStep(client, args.(*tutorial.CompleteTutorialStepRequest))
 		},
-		10048: func(client *network.Client, args interface{}) (protobuf.Message, error) {
+		10047: func(client *network.Client, args interface{}) (protobuf.Message, error) {
 			return router.ForceSetTutorialStep(client, args.(*tutorial.CompleteTutorialStepRequest))
 		},
-		10049: func(client *network.Client, args interface{}) (protobuf.Message, error) {
+		10048: func(client *network.Client, args interface{}) (protobuf.Message, error) {
 			return router.DeleteSoftTutorialStep(client, args.(*tutorial.CompleteTutorialStepRequest))
 		},
-		10050: func(client *network.Client, args interface{}) (protobuf.Message, error) {
+		10049: func(client *network.Client, args interface{}) (protobuf.Message, error) {
 			return router.GetDailyRewards(client, args.(*base.Empty))
 		},
-		10051: func(client *network.Client, args interface{}) (protobuf.Message, error) {
+		10050: func(client *network.Client, args interface{}) (protobuf.Message, error) {
 			return router.TakeDailyReward(client, args.(*base.Empty))
 		},
-		10052: func(client *network.Client, args interface{}) (protobuf.Message, error) {
+		10051: func(client *network.Client, args interface{}) (protobuf.Message, error) {
 			return router.SendLoginEmail(client, args.(*accounts.LoginEmailRequest))
 		},
-		10053: func(client *network.Client, args interface{}) (protobuf.Message, error) {
+		10052: func(client *network.Client, args interface{}) (protobuf.Message, error) {
 			return router.VerifyLoginEmail(client, args.(*accounts.VerifyLoginEmailRequest))
 		},
-		10054: func(client *network.Client, args interface{}) (protobuf.Message, error) {
+		10053: func(client *network.Client, args interface{}) (protobuf.Message, error) {
 			return router.SocialLogin(client, args.(*accounts.VerifySocialLoginRequest))
 		},
-		10055: func(client *network.Client, args interface{}) (protobuf.Message, error) {
-			return router.GetUserBalances(client, args.(*accounts.AccountBalanceRequest))
-		},
-		10056: func(client *network.Client, args interface{}) (protobuf.Message, error) {
+		10054: func(client *network.Client, args interface{}) (protobuf.Message, error) {
 			return router.SetActiveWallet(client, args.(*accounts.SetActiveWalletRequest))
 		},
-		10057: func(client *network.Client, args interface{}) (protobuf.Message, error) {
+		10055: func(client *network.Client, args interface{}) (protobuf.Message, error) {
 			return router.QuickMatch(client, args.(*matches.QuickMatchRequest))
 		},
-		10058: func(client *network.Client, args interface{}) (protobuf.Message, error) {
+		10056: func(client *network.Client, args interface{}) (protobuf.Message, error) {
 			return router.GetOpponentsQuickMatch(client, args.(*base.Empty))
 		},
-		10059: func(client *network.Client, args interface{}) (protobuf.Message, error) {
+		10057: func(client *network.Client, args interface{}) (protobuf.Message, error) {
 			return router.SelectQuickMatch(client, args.(*matches.QuickMatchData))
 		},
-		10060: func(client *network.Client, args interface{}) (protobuf.Message, error) {
+		10058: func(client *network.Client, args interface{}) (protobuf.Message, error) {
 			return router.AcceptQuickMatch(client, args.(*matches.QuickMatchAccept))
 		},
-		10061: func(client *network.Client, args interface{}) (protobuf.Message, error) {
+		10059: func(client *network.Client, args interface{}) (protobuf.Message, error) {
 			return router.DeclineQuickMatch(client, args.(*matches.QuickMatchDecline))
 		},
-		10062: func(client *network.Client, args interface{}) (protobuf.Message, error) {
+		10060: func(client *network.Client, args interface{}) (protobuf.Message, error) {
 			return router.CancelQuickMatch(client, args.(*matches.QuickMatchCancel))
-		},
-		10063: func(client *network.Client, args interface{}) (protobuf.Message, error) {
-			return router.CreateUpgradeOrder(client, args.(*store.UpgradeRequest))
 		},
 	}
 	h.argTypeByMethodID = map[uint16]reflect.Type{
@@ -348,31 +336,28 @@ func NewServerHandler(router ServerRouter) *ServerHandler {
 		10036: reflect.TypeOf((*base.Empty)(nil)).Elem(),
 		10037: reflect.TypeOf((*base.Empty)(nil)).Elem(),
 		10038: reflect.TypeOf((*store.OrderRequest)(nil)).Elem(),
-		10039: reflect.TypeOf((*store.PromoCodeSubmitRequest)(nil)).Elem(),
-		10040: reflect.TypeOf((*store.Receipt)(nil)).Elem(),
-		10041: reflect.TypeOf((*base.ObjectID)(nil)).Elem(),
+		10039: reflect.TypeOf((*store.Receipt)(nil)).Elem(),
+		10040: reflect.TypeOf((*base.ObjectID)(nil)).Elem(),
+		10041: reflect.TypeOf((*base.Empty)(nil)).Elem(),
 		10042: reflect.TypeOf((*base.Empty)(nil)).Elem(),
-		10043: reflect.TypeOf((*base.Empty)(nil)).Elem(),
-		10044: reflect.TypeOf((*resources.WithdrawRequest)(nil)).Elem(),
-		10045: reflect.TypeOf((*accounts.SetInfoRequest)(nil)).Elem(),
-		10046: reflect.TypeOf((*base.Empty)(nil)).Elem(),
+		10043: reflect.TypeOf((*resources.WithdrawRequest)(nil)).Elem(),
+		10044: reflect.TypeOf((*accounts.SetInfoRequest)(nil)).Elem(),
+		10045: reflect.TypeOf((*base.Empty)(nil)).Elem(),
+		10046: reflect.TypeOf((*tutorial.CompleteTutorialStepRequest)(nil)).Elem(),
 		10047: reflect.TypeOf((*tutorial.CompleteTutorialStepRequest)(nil)).Elem(),
 		10048: reflect.TypeOf((*tutorial.CompleteTutorialStepRequest)(nil)).Elem(),
-		10049: reflect.TypeOf((*tutorial.CompleteTutorialStepRequest)(nil)).Elem(),
+		10049: reflect.TypeOf((*base.Empty)(nil)).Elem(),
 		10050: reflect.TypeOf((*base.Empty)(nil)).Elem(),
-		10051: reflect.TypeOf((*base.Empty)(nil)).Elem(),
-		10052: reflect.TypeOf((*accounts.LoginEmailRequest)(nil)).Elem(),
-		10053: reflect.TypeOf((*accounts.VerifyLoginEmailRequest)(nil)).Elem(),
-		10054: reflect.TypeOf((*accounts.VerifySocialLoginRequest)(nil)).Elem(),
-		10055: reflect.TypeOf((*accounts.AccountBalanceRequest)(nil)).Elem(),
-		10056: reflect.TypeOf((*accounts.SetActiveWalletRequest)(nil)).Elem(),
-		10057: reflect.TypeOf((*matches.QuickMatchRequest)(nil)).Elem(),
-		10058: reflect.TypeOf((*base.Empty)(nil)).Elem(),
-		10059: reflect.TypeOf((*matches.QuickMatchData)(nil)).Elem(),
-		10060: reflect.TypeOf((*matches.QuickMatchAccept)(nil)).Elem(),
-		10061: reflect.TypeOf((*matches.QuickMatchDecline)(nil)).Elem(),
-		10062: reflect.TypeOf((*matches.QuickMatchCancel)(nil)).Elem(),
-		10063: reflect.TypeOf((*store.UpgradeRequest)(nil)).Elem(),
+		10051: reflect.TypeOf((*accounts.LoginEmailRequest)(nil)).Elem(),
+		10052: reflect.TypeOf((*accounts.VerifyLoginEmailRequest)(nil)).Elem(),
+		10053: reflect.TypeOf((*accounts.VerifySocialLoginRequest)(nil)).Elem(),
+		10054: reflect.TypeOf((*accounts.SetActiveWalletRequest)(nil)).Elem(),
+		10055: reflect.TypeOf((*matches.QuickMatchRequest)(nil)).Elem(),
+		10056: reflect.TypeOf((*base.Empty)(nil)).Elem(),
+		10057: reflect.TypeOf((*matches.QuickMatchData)(nil)).Elem(),
+		10058: reflect.TypeOf((*matches.QuickMatchAccept)(nil)).Elem(),
+		10059: reflect.TypeOf((*matches.QuickMatchDecline)(nil)).Elem(),
+		10060: reflect.TypeOf((*matches.QuickMatchCancel)(nil)).Elem(),
 	}
 	h.methodNameByID = map[uint16]string{
 		10000: "GetConfigs",
@@ -414,31 +399,28 @@ func NewServerHandler(router ServerRouter) *ServerHandler {
 		10036: "GetArenaConfigs",
 		10037: "GetInGameStoreData",
 		10038: "CreateOrder",
-		10039: "SubmitPromoCode",
-		10040: "SendPaymentReceipt",
-		10041: "OpenPack",
-		10042: "GetUnopenedPacks",
-		10043: "GetLoCGRate",
-		10044: "Withdraw",
-		10045: "SetAccountInfo",
-		10046: "CompleteTutorialStep",
-		10047: "CompleteSoftTutorialStep",
-		10048: "ForceSetTutorialStep",
-		10049: "DeleteSoftTutorialStep",
-		10050: "GetDailyRewards",
-		10051: "TakeDailyReward",
-		10052: "SendLoginEmail",
-		10053: "VerifyLoginEmail",
-		10054: "SocialLogin",
-		10055: "GetUserBalances",
-		10056: "SetActiveWallet",
-		10057: "QuickMatch",
-		10058: "GetOpponentsQuickMatch",
-		10059: "SelectQuickMatch",
-		10060: "AcceptQuickMatch",
-		10061: "DeclineQuickMatch",
-		10062: "CancelQuickMatch",
-		10063: "CreateUpgradeOrder",
+		10039: "SendPaymentReceipt",
+		10040: "OpenPack",
+		10041: "GetUnopenedPacks",
+		10042: "GetLoCGRate",
+		10043: "Withdraw",
+		10044: "SetAccountInfo",
+		10045: "CompleteTutorialStep",
+		10046: "CompleteSoftTutorialStep",
+		10047: "ForceSetTutorialStep",
+		10048: "DeleteSoftTutorialStep",
+		10049: "GetDailyRewards",
+		10050: "TakeDailyReward",
+		10051: "SendLoginEmail",
+		10052: "VerifyLoginEmail",
+		10053: "SocialLogin",
+		10054: "SetActiveWallet",
+		10055: "QuickMatch",
+		10056: "GetOpponentsQuickMatch",
+		10057: "SelectQuickMatch",
+		10058: "AcceptQuickMatch",
+		10059: "DeclineQuickMatch",
+		10060: "CancelQuickMatch",
 	}
 	h.cachedMethods = map[uint16]*network.Packet{
 		10000: &network.Packet{},
@@ -455,7 +437,7 @@ func (h *ServerHandler) GetMethodNameByID(methodID uint16) string {
 }
 
 func (h *ServerHandler) Validate(methodID uint16) bool {
-	return methodID >= 10000 && methodID <= 10063
+	return methodID >= 10000 && methodID <= 10060
 }
 
 func (h *ServerHandler) ClearCache() {
@@ -591,7 +573,6 @@ func NewClientHandler() *ClientHandler {
 		20024: "OnQuickMatchCanceled",
 		20025: "OnPlayerDataChanged",
 		20026: "OnCardUpgradeCompleted",
-		20027: "OnTokenPurchaseCompleted",
 	}
 	return h
 }
@@ -702,10 +683,6 @@ func (h *ClientHandler) OnPlayerDataChanged(client *network.Client, arg *player.
 
 func (h *ClientHandler) OnCardUpgradeCompleted(client *network.Client, arg *store.CardUpgradeResult, error *network.Error) {
 	h.invoke(client, 20026, arg, error)
-}
-
-func (h *ClientHandler) OnTokenPurchaseCompleted(client *network.Client, arg *store.TokenPurchaseResult, error *network.Error) {
-	h.invoke(client, 20027, arg, error)
 }
 
 func (h *ClientHandler) invoke(client *network.Client, methodID uint16, arg protobuf.Message, error *network.Error) {

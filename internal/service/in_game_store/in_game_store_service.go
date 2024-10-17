@@ -437,6 +437,9 @@ func (s *Service) CreateOrder(
 	} else {
 		total = fmt.Sprintf("%.2f", priceUSD)
 	}
+	
+	playerPromoCodeData := s.sessions.Get(ctx).PlayerData.ActivePromoCode
+	promoCode := playerPromoCodeData.PromoCode
 
 	order := &storeDto.Order{
 		BuyerID:       session.PlayerData.ID,
@@ -446,6 +449,7 @@ func (s *Service) CreateOrder(
 		Quantity:      request.Quantity,
 		Status:        storeDto.OrderStatus_WaitingForPayment,
 		Price:         total,
+		PromoCode:     promoCode,
 		CreatedAt:     &base.Timestamp{Seconds: time.Now().UTC().Unix()},
 	}
 

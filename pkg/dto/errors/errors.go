@@ -85,8 +85,6 @@ var ErrOrderAlreadyPaid = errors.New("OrderAlreadyPaid")
 
 var ErrInvalidOrderStatus = errors.New("InvalidOrderStatus")
 
-var ErrInvalidQuantity = errors.New("InvalidQuantity")
-
 var ErrProductNotAvailable = errors.New("ProductNotAvailable")
 
 var ErrWithdrawalAmountIsLowerThanRequired = errors.New("WithdrawalAmountIsLowerThanRequired")
@@ -138,13 +136,12 @@ var ErrorsByCode = map[error]uint16 {
 	ErrProductNotFound: 31,
 	ErrOrderAlreadyPaid: 32,
 	ErrInvalidOrderStatus: 33,
-	ErrInvalidQuantity: 34,
-	ErrProductNotAvailable: 35,
-	ErrWithdrawalAmountIsLowerThanRequired: 36,
-	ErrWithdrawalLimitExceeded: 37,
-	ErrMaintenanceMode: 38,
-	ErrWithdrawalIsNotAvailableYet: 39,
-	ErrProductIsSoldOut: 40,
-	ErrDuplicateWallet: 41,
-	ErrWalletAlreadyAttched: 42,
+	ErrProductNotAvailable: 34,
+	ErrWithdrawalAmountIsLowerThanRequired: 35,
+	ErrWithdrawalLimitExceeded: 36,
+	ErrMaintenanceMode: 37,
+	ErrWithdrawalIsNotAvailableYet: 38,
+	ErrProductIsSoldOut: 39,
+	ErrDuplicateWallet: 40,
+	ErrWalletAlreadyAttched: 41,
 }
