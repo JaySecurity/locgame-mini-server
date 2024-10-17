@@ -2,13 +2,46 @@ package router
 
 import (
 	"encoding/json"
+	"io"
+	storeDto "locgame-mini-server/pkg/dto/store"
 	"locgame-mini-server/pkg/log"
 	"net/http"
 )
 
-// func (r *Router) CreateOrder(client *network.Client, in *storeDto.OrderRequest) (*storeDto.OrderResponse, error) {
-// 	return r.InGameStore.CreateOrder(client.Context(), in)
-// }
+func (r *Router) CreateOrder(w http.ResponseWriter, req *http.Request) {
+	sessionIdCookie, err := req.Cookie("SessionID")
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	sessionId := sessionIdCookie.Value
+	session := r.Sessions.Get(sessionId)
+	in := &storeDto.OrderRequest{}
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		log.Error("Error reading request body", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	err = json.Unmarshal(body, in)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	orderResponse, err := r.InGameStore.CreateOrder(session.Context, sessionId, in)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	jsonData, err := json.Marshal(orderResponse)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonData)
+}
+
 // func (r *Router) CreateUpgradeOrder(client *network.Client, in *storeDto.UpgradeRequest) (*storeDto.OrderResponse, error) {
 // 	return r.InGameStore.CreateUpgradeOrder(client.Context(), in)
 // }
@@ -65,4 +98,6 @@ func (r *Router) HandleStoreRoutes() {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(jsonData)
 	})
+
+	r.Mux.HandleFunc("POST /order", r.CreateOrder)
 }
