@@ -46,10 +46,34 @@ func (r *Router) CreateOrder(w http.ResponseWriter, req *http.Request) {
 // 	return r.InGameStore.CreateUpgradeOrder(client.Context(), in)
 // }
 
-// func (r *Router) SendPaymentReceipt(client *network.Client, in *storeDto.Receipt) (*base.Empty, error) {
-// 	err := r.InGameStore.SetPaymentReceipt(client.Context(), in)
-// 	return &base.Empty{}, err
-// }
+func (r *Router) SendPaymentReceipt(w http.ResponseWriter, req *http.Request) {
+	sessionIdCookie, err := req.Cookie("SessionID")
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	sessionId := sessionIdCookie.Value
+	session := r.Sessions.Get(sessionId)
+	in := &storeDto.Receipt{}
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		log.Error("Error reading request body", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	err = json.Unmarshal(body, in)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	err = r.InGameStore.SetPaymentReceipt(session.Context, in)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
 
 // func (r *Router) OpenPack(client *network.Client, in *base.ObjectID) (*storeDto.OpenPackResponse, error) {
 // 	return r.InGameStore.OpenPack(client.Context(), in)

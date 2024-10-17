@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package player;
+
+import "arena.proto";
+import "base.proto";
+import "cards.proto";
+import "resources.proto";
+import "store.proto";
+import "tutorial.proto";
+
+option csharp_namespace = "LoC.DTOs.Player";
+option go_package = "locgame-mini-server/pkg/dto/player";
+
+message PlayerData {
+  base.ObjectID ID = 1;
+  string ActiveWallet = 2;
+  string Name = 3;
+  string AvatarID = 4;
+  base.Timestamp LastActivity = 5;
+  bool Online = 6;
+  cards.Decks Decks = 7;
+  map<int32, int32> Resources = 8;
+  map<int32, resources.ResettableResourceData> ResettableResources = 9;
+  StoryModeData StoryMode = 10;
+  arena.ArenaData ArenaData = 11;
+  store.PlayerStoreData PlayerStoreData = 12;
+  tutorial.TutorialData TutorialData = 13;
+  base.Timestamp CreatedAt = 14;
+  Status status = 15;
+  string CognitoUsername = 16;
+  string Email = 17;
+  string ParticleWallet = 18;
+  string ExternalWallet = 19;
+  repeated string OwnedCards = 20;
+  repeated string VirtualCards = 21;
+  PromoCodeData ActivePromoCode = 22;
+}
+
+message PlayerDataResponse {
+  PlayerData Data = 1;
+  repeated string OwnedCards = 2;
+}
+
+message StoryModeData {
+  int32 LastUnlockedLevel = 1;
+}
+
+message PromoCodeData {
+  string PromoCode = 1;
+  base.Timestamp SubmissionDate = 2;
+  string PromoCodeType = 3;
+  bool IsOwner = 4;
+}
+
+message DailyRewardData {
+  base.ObjectID ID = 1;
+  int32 Counter = 2;
+  base.Timestamp LastLoggedAt = 3;
+}
+
+message DailyRewardsResponse {
+  repeated resources.ResourceAdjustment AllRewards = 1;
+  resources.ResourceAdjustment CurrentRewards = 2;
+  DailyRewardData Data = 3;
+}
+
+enum Status {
+  OFFLINE = 0;
+  ONLINE = 1;
+  PLAYING = 2;
+  PENDING_TO_RECONNECT = 3;
+  PENDING_FRIEND_REQUEST = 4;
+  PENDING_FRIENDLY_MATCH_REQUEST = 5;
+  QUICK_MATCH_REQUEST = 6;
+  PENDING_QUICK_MATCH_REQUEST = 7;
+}

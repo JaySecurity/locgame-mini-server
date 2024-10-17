@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package tutorial;
+
+option csharp_namespace = "LoC.DTOs.Tutorial";
+option go_package = "locgame-mini-server/pkg/dto/tutorial";
+
+message CompleteTutorialStepRequest {
+  int32 ID = 1;
+}
+
+message TutorialData {
+  int32 CurrentStep = 1;
+  repeated int32 CompletedSoftTutorials = 2;
+}

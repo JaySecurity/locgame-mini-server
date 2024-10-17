@@ -1,0 +1,117 @@
+syntax = "proto3";
+
+package accounts;
+
+import "base.proto";
+import "options.proto";
+
+option csharp_namespace = "LoC.DTOs.Accounts";
+option go_package = "locgame-mini-server/pkg/dto/accounts";
+
+enum ProviderType {
+  None = 0;
+  Particle = 1;
+  MetaMask = 2;
+}
+
+message LoginResponse {
+  string RefreshToken = 1 [(options.HideInLog) = true];
+  UserData UserData = 2;
+  base.Timestamp UnixServerTime = 3;
+  string IdToken = 4 [(options.HideInLog) = true];
+}
+
+message RefreshTokenRequest {
+  string RefreshToken = 1 [(options.HideInLog) = true];
+}
+
+message Web3AuthRequest {
+  string Address = 1;
+  string Client = 2;
+}
+
+message Web3ChallengeResponse {
+  string Challenge = 1;
+}
+
+message Web3Signature {
+  string Address = 1;
+  string Signature = 2;
+}
+
+message UserData {
+  base.ObjectID ID = 1;
+  string Name = 2;
+  string ParticleWallet = 3;
+  string ExternalWallet = 4;
+  string ActiveWallet = 5;
+}
+
+message UserInfo {
+  base.ObjectID ID = 1;
+  string Name = 2;
+  string AvatarID = 3;
+  int32 Rating = 4;
+  int32 League = 5;
+  bool IsOnline = 6;
+}
+
+message AccountInfo {
+  base.ObjectID ID = 1;
+  string Name = 2;
+  string AvatarID = 3;
+  string Email = 4;
+}
+
+message DuplicateLogin {
+  string Initiator = 1;
+}
+
+message SetInfoRequest {
+  string Name = 1;
+  string AvatarID = 2;
+}
+
+message Disconnect {
+  DisconnectReason Reason = 1;
+}
+
+enum DisconnectReason {
+  AnotherSessionStarted = 0;
+  AccessIsDenied = 1;
+}
+
+message LoginEmailRequest {
+  string Email = 1;
+  bool IsMetaMask = 2;
+  string wallet =3;
+}
+
+message LoginEmailResponse {
+  string ChallengeName = 1;
+  string Session = 2;
+}
+
+message VerifyLoginEmailRequest {
+  string Email = 1;
+  string Code = 2;
+  string ChallengeName = 3;
+  string Session = 4;
+}
+
+message VerifySocialLoginRequest {
+  string Code = 1;
+}
+
+message SetActiveWalletRequest {
+  string Wallet = 1;
+  ProviderType Provider = 2;
+}
+
+message AccountBalanceRequest{
+  string Wallet = 1;
+}
+
+message AccountBalanceResponse{
+map<string,string> Balances = 1;
+}

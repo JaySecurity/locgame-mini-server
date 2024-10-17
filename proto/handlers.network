@@ -1,0 +1,273 @@
+option csharp_namespace = "LoC.DTOs"
+option go_package = "dto"
+option go_module_name = "locgame-service"
+
+errors {
+	// UnexpectedError is an error that occurs when an unknown error occurs for unknown reasons.
+	UnexpectedError
+	
+	AuthChallengeNotFound
+
+	InvalidSignature
+
+	InvalidToken
+
+	InsufficientNumberOfCardsInDeck
+
+	// AccountNotFound error that occurs when the required account is not found.
+  UserNotFound
+
+  NotAuthorized
+
+  UserNotConfirmed
+
+  // OperationIsProhibited error that occurs when creating an action that is prohibited from doing
+  // For example: an operation is being performed that is only allowed in the test environment.
+  OperationIsProhibited
+
+  // SessionNotFound error that occurs when session data is not found.
+  // Re-login required.
+  SessionNotFound
+
+  PlayerMovesOutOfTurn
+
+  InvalidCard
+
+  CellIsAlreadyOccupied
+
+  CannotAttack
+
+  InvalidDeck
+
+  MatchNotFound
+
+  RequestAlreadySent
+
+  RequestNotFound
+
+  AlreadyYourFriend
+
+  AlreadyHaveAnIncomingRequest
+
+  PlayersFriendsListIsFull
+
+  PlayerAlreadyEnteredTheArena
+
+  ArenaOpponentNotFound
+
+  YouAreNotInTheArena
+
+  MissionIsLocked
+
+  ZeroWalletAddress
+
+  NotEnoughResources
+
+  TrophyRoadRewardAlreadyClaimed
+
+  TrophyRoadRewardNotFound
+
+  StoryModeIsNotCompleted
+
+  PlayerIsNotOnline
+
+  ProductNotFound
+
+  OrderAlreadyPaid
+
+  InvalidOrderStatus
+
+  InvalidQuantity
+
+  ProductNotAvailable
+
+  WithdrawalAmountIsLowerThanRequired
+
+  WithdrawalLimitExceeded
+
+  MaintenanceMode
+
+  WithdrawalIsNotAvailableYet
+
+  ProductIsSoldOut
+
+  DuplicateWallet
+
+  WalletAlreadyAttched
+}
+
+server {
+	// GetConfigs returns all the configurations required for the client to work.
+	GetConfigs(base.Empty) (game.Configs) { cached = true }
+
+	AuthToken(accounts.RefreshTokenRequest) (accounts.LoginResponse)
+
+  Web3ChallengeRequest (accounts.Web3AuthRequest) (accounts.Web3ChallengeResponse)
+
+  Web3Authorize (accounts.Web3Signature) (accounts.LoginResponse)
+
+  FakeWeb3Authorize (accounts.Web3AuthRequest) (accounts.LoginResponse)
+
+  Logout(base.Empty) (base.Empty)
+
+  GetPlayerData(base.Empty) (player.PlayerDataResponse)
+
+  SetDecks(cards.Decks) (cards.DecksChanges)
+
+  Move(game.Move) (game.MoveResult)
+
+  LeaveMatch(base.Empty) (base.Empty)
+
+  RequestMatchmaking(game.MatchmakingRequest) (base.Empty)
+
+  CancelMatchmaking(base.Empty) (base.Empty)
+
+  PlayerReady(base.Empty) (base.Empty)
+
+  StartMission(game.MissionRequest) (base.Empty)
+
+  GetFriendsData(base.Empty) (friends.FriendsData)
+
+  FriendRequest(base.ObjectID) (accounts.UserInfo)
+
+  AcceptFriendRequest(base.ObjectID) (base.Empty)
+
+  DeclineFriendRequest(base.ObjectID) (base.Empty)
+
+  CancelFriendRequest(base.ObjectID) (base.Empty)
+
+  DeleteFriend(base.ObjectID) (base.Empty)
+
+  FriendlyMatch(friends.FriendlyMatchRequest) (base.Empty)
+
+  AcceptFriendlyMatch(friends.FriendlyMatchAccept) (base.Empty)
+
+  DeclineFriendlyMatch(friends.FriendlyMatchDecline) (base.Empty)
+
+  CancelFriendlyMatch(friends.FriendlyMatchCancel) (base.Empty)
+
+  FindPlayers(friends.FindRequest) (friends.FindResponse)
+
+  EnterArenaTour(arena.EnterRequest) (arena.EnterResponse)
+
+  SetArenaAttackDeck(arena.SetAttackDeckRequest) (base.Empty)
+
+  StartArenaBattle(base.Empty) (base.Empty)
+
+  GetArenaLeaderboard(base.Empty) (arena.ArenaLeaderboardResponse)
+
+  FindArenaOpponent(base.Empty) (arena.ArenaPlayerData)
+
+  CreateDeck(cards.Deck) (cards.Deck)
+
+	TakeArenaTourRewards(base.Empty) (arena.ArenaTourRewardsResponse)
+
+	ArenaRevive(base.Empty) (resources.ResourceAdjustments)
+
+	GetArenaBattleLogs(base.Empty) (arena.ArenaBattleLogs)
+
+	ClaimTrophyRoadReward(arena.ClaimTrophyRoadRewardRequest) (arena.ClaimTrophyRoadRewardResponse)
+
+	GetArenaTourRewards(base.Empty) (resources.ResourceAdjustments)
+
+	GetArenaConfigs(base.Empty) (arena.ArenaConfig)
+
+	GetInGameStoreData(base.Empty) (store.StoreData)
+
+	CreateOrder(store.OrderRequest) (store.OrderResponse)
+
+	SubmitPromoCode(store.PromoCodeSubmitRequest) (store.PromoCodeSubmitResponse)
+
+	SendPaymentReceipt(store.Receipt) (base.Empty)
+
+	OpenPack(base.ObjectID) (store.OpenPackResponse)
+
+	GetUnopenedPacks(base.Empty) (store.Orders)
+
+	GetLoCGRate(base.Empty) (store.LoCGConvertRate)
+
+	Withdraw(resources.WithdrawRequest) (resources.WithdrawResponse)
+
+	SetAccountInfo(accounts.SetInfoRequest) (base.Empty)
+
+	CompleteTutorialStep(base.Empty) (base.Empty)
+
+	CompleteSoftTutorialStep(tutorial.CompleteTutorialStepRequest) (base.Empty)
+
+	ForceSetTutorialStep(tutorial.CompleteTutorialStepRequest) (base.Empty)
+
+	DeleteSoftTutorialStep(tutorial.CompleteTutorialStepRequest) (base.Empty)
+
+	GetDailyRewards(base.Empty) (player.DailyRewardsResponse)
+
+	TakeDailyReward(base.Empty) (resources.ResourceAdjustments)
+
+	SendLoginEmail (accounts.LoginEmailRequest) (accounts.LoginEmailResponse)
+
+  VerifyLoginEmail (accounts.VerifyLoginEmailRequest) (accounts.LoginResponse)
+
+  SocialLogin (accounts.VerifySocialLoginRequest) (accounts.LoginResponse)
+
+  GetUserBalances(accounts.AccountBalanceRequest)(accounts.AccountBalanceResponse)
+  
+  SetActiveWallet(accounts.SetActiveWalletRequest) (base.Empty)
+
+  QuickMatch(matches.QuickMatchRequest) (base.Empty)
+    
+  GetOpponentsQuickMatch(base.Empty) (matches.QuickMatchList)
+    
+  SelectQuickMatch(matches.QuickMatchData) (base.Empty)
+    
+  AcceptQuickMatch(matches.QuickMatchAccept) (base.Empty)
+    
+  DeclineQuickMatch(matches.QuickMatchDecline) (base.Empty)
+    
+  CancelQuickMatch(matches.QuickMatchCancel) (base.Empty)
+
+  CreateUpgradeOrder(store.UpgradeRequest) (store.OrderResponse)
+
+
+}
+
+client {
+	OnMatchmakingComplete(game.MatchmakingCompleteMessage)
+	OnBeginMatch(game.BeginMatch)
+	OnOpponentMove(game.MoveResult)
+	OnEndOpponentTurn(game.EndOpponentTurn)
+	OnEndMatch(game.MatchResult)
+	OnOpponentLeft(game.MatchResult)
+	OnEndTurn(game.EndTurn)
+
+	OnFriendRequestReceived(accounts.UserInfo)
+	OnFriendRequestAccepted(base.ObjectID)
+	OnFriendRequestDeclined(base.ObjectID)
+	OnFriendRequestCanceled(base.ObjectID)
+	OnFriendDeleted(base.ObjectID)
+
+	OnFriendlyMatchReceived(friends.FriendlyMatchRequest)
+	OnFriendlyMatchDeclined(friends.FriendlyMatchDecline)
+	OnFriendlyMatchCanceled(base.Empty)
+
+	OnRatingChanged(base.Int)
+	OnArenaTourKicked(arena.ArenaTourRewardsResponse)
+	OnCoinsPurchaseCompleted(store.CoinsPurchaseResult)
+	OnMintOfPackCompleted(store.PackPurchaseResult)
+
+	OnDisconnect(accounts.Disconnect)
+
+	OnFriendStatusChanged(friends.FriendStatusData)
+
+	OnMaintenanceInfoChanged(maintenance.MaintenanceData)
+  
+  OnQuickMatchReceived(matches.QuickMatchRequest) (base.Empty)
+  
+  OnQuickMatchDeclined(matches.QuickMatchDecline) (base.Empty)
+  
+  OnQuickMatchCanceled(base.Empty) (base.Empty)
+
+  OnPlayerDataChanged(player.PlayerData)
+
+  OnCardUpgradeCompleted(store.CardUpgradeResult)
+
+  OnTokenPurchaseCompleted(store.TokenPurchaseResult)
+}

@@ -1,0 +1,25 @@
+// Copyright © 2022 FuryLion Group LLC. All Rights Reserved.
+//
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// without the express permission of FuryLion Group LLC.
+// Proprietary and confidential.
+//
+// Created by Vadim Vlasov on 11.10.22
+
+syntax = "proto3";
+
+package maintenance;
+
+import "base.proto";
+
+option csharp_namespace = "LoC.DTOs.Maintenance";
+option go_package = "locgame-mini-server/pkg/dto/maintenance";
+option optimize_for = SPEED;
+
+message MaintenanceData {
+  base.ObjectID ID = 1;
+  base.Timestamp StartDate = 2;
+  base.Timestamp EndDate = 3;
+  repeated string WhitelistedIPs = 4;
+  string Message = 5;
+}

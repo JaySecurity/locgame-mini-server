@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package matches;
+
+import "base.proto";
+import "accounts.proto";
+import "resources.proto";
+import "game.proto";
+
+option csharp_namespace = "LoC.DTOs.Matches";
+option go_package = "locgame-mini-server/pkg/dto/matches";
+
+message QuickMatchRequest {
+  game.GameType GameType = 1;
+  int32 Stake = 2;
+}
+
+message stakes{
+  repeated string LC = 1;
+}
+
+message QuickMatchList{
+  map<string, stakes> Matches = 1;
+}
+
+enum QuickMatchDeclineReason {
+  Unknown = 0;
+  LeftTheGame = 1;
+  NotInterested = 2;
+}
+
+message QuickMatchDecline {
+  QuickMatchDeclineReason Reason = 1;
+}
+
+message QuickMatchResult {
+  repeated resources.ResourceAdjustment Adjustments = 1;
+}
+
+message QuickMatchCancel {
+}
+
+message QuickMatchEnded {
+  repeated resources.ResourceAdjustment Adjustments = 1;
+}
+
+message QuickMatchAccept {
+  base.ObjectID OpponentID = 1;
+}
+
+message QuickMatchData {
+  base.ObjectID PlayerID = 1;
+  base.ObjectID OpponentID = 2;
+  int32 Stake = 3;
+}
+
+message QuickMatchPlayersListRequest {
+  string Query = 1;
+}
+
+message QuickMatchPlayersListResponse {
+  repeated accounts.UserInfo Users = 1;
+}
+
+message QuickMatchConfig {
+  repeated int32 Stakes = 1;
+  float Fee = 2;
+}

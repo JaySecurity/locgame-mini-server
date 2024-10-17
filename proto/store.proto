@@ -1,0 +1,283 @@
+syntax = "proto3";
+
+package store;
+
+import "base.proto";
+import "cards.proto";
+import "resources.proto";
+
+option csharp_namespace = "LoC.DTOs.Store";
+option go_package = "locgame-mini-server/pkg/dto/store";
+
+message BigInt {
+  bytes Value = 1;
+}
+
+message PlayerStoreData {
+  map<string, int32> PurchasedProducts = 1;
+  base.Timestamp LastWithdrawalAt = 2;
+}
+
+message Discount {
+  base.ObjectID ID = 6;
+  bool Active = 1;
+  string Product = 2;
+  DiscountType Type = 3;
+  float Value = 4;
+  DiscountDuration Duration = 5;
+}
+
+enum DiscountType {
+  Percentage = 0;
+  Fixed = 1;
+}
+
+message DiscountDuration {
+  base.Timestamp StartTime = 2;
+  base.Timestamp EndTime = 3;
+}
+
+message StoreData {
+  repeated Pack SpecialOffers = 1;
+  repeated Pack Packs = 2;
+  repeated CoinsPack Coins = 3;
+  LoCGConvertRate LoCGConvertRate = 4;
+  map<string, Discount> Discounts = 5;
+  map<string, Upgrades> Upgrades = 6;
+  repeated Token Tokens = 7;
+  EthConvertRate EthConvertRate = 8;
+}
+
+message LoCGConvertRate {
+  base.Timestamp NextUpdateTime = 1;
+  double Price = 2;
+}
+message EthConvertRate {
+  base.Timestamp NextUpdateTime = 1;
+  double Price = 2;
+}
+
+message CoinsPack {
+  string ID = 1;
+  int32 Count = 6;
+
+  string ProductID = 8;
+  float PriceInUSD = 9;
+}
+
+// TokenPack is for future token purchase implementation
+// Only available limited time
+message Token {
+  string ID = 1;
+  string TokenID = 2;
+  string Name = 3;
+  bool Available = 4;
+  int64 MaxSupply = 5;
+  int32 QtyPerUnit = 6;
+  int64 SaleStart = 7; // Unix timestamp
+  int64 SaleEnd = 8; // Unix timestamp
+  string ProductID = 9;
+  float PriceInUSD = 10;
+  float LOCGBonus = 11;
+  int64 MaxPurchase = 12;
+  int32 MinPurchase = 13;
+  int64 Remaining = 14;
+  int64 AdditionalAccountedQuantity = 15;
+  repeated TokenOffer Offers = 16;
+  repeated TokenPromoCode PromoCodes = 17;
+}
+
+message TokenOffer {
+  string ID = 1;
+  int64 SaleStart = 2; // Unix timestamp
+  int64 SaleEnd = 3; // Unix timestamp
+  float LOCGBonusOverride = 4;
+}
+
+message TokenPromoCode {
+  string ID = 1;
+  bool Active = 2;
+  float Bonus = 3;
+  float ReferralBonus = 5;
+  float ReferrerPayout = 6;
+  repeated int32 PaymentMethodsInclude = 7;
+  repeated int32 PaymentMethodsExcept = 8;
+}
+
+message Pack {
+  string ID = 1;
+  string Title = 2;
+  string Description = 3;
+  string DescriptionLong = 4;
+  string Image = 5;
+  repeated PackItem Items = 6;
+  int32 MaxPurchase = 7;
+
+  string ProductID = 8;
+  float PriceInUSD = 9;
+  bool Available = 10;
+  float PriceInLC = 11;
+}
+
+message Upgrades {
+  repeated cards.Option Options = 1;
+}
+
+message RandomizedCard {
+  int32 Set = 1;
+  int32 Pack = 2;
+  map<int32, float> GameRarities = 3;
+  map<int32, float> VisualRarities = 4;
+}
+
+message PackItem {
+  string PredefinedCardID = 1;
+  RandomizedCard RandomizedCard = 2;
+}
+
+enum ProductType {
+  PackOfCards = 0;
+  PackOfCoins = 1;
+  SpecialOffer = 2;
+  CardUpgrade = 3;
+  VToken = 4;
+}
+
+enum PaymentMethod {
+  USDC = 0;
+  LC = 1;
+  LOCG = 2;
+  LOCGBase = 3;
+  ETH = 4;
+  PayPal = 5;
+  ByAdmin = 6;
+  USDCBase = 7;
+  USDT = 8;
+  ETHBase = 9;
+}
+
+message Order {
+  base.ObjectID ID = 1;
+  base.ObjectID BuyerID = 2;
+  int64 Quantity = 3;
+  string ProductID = 4;
+  ProductType ProductType = 5;
+  PaymentMethod PaymentMethod = 6;
+  OrderStatus Status = 7;
+  string Price = 8;
+  base.Timestamp CreatedAt = 9;
+  string PaymentHash = 10;
+  string OperationHash = 11;
+  repeated string Cards = 12;
+  int32 Coins = 13;
+  string Error = 14;
+  string PromoCode = 15;
+}
+
+message Gift {
+  base.ObjectID ID = 1;
+  string Wallet = 2;
+  OrderStatus Status = 3;
+  base.Timestamp CreatedAt = 4;
+  string OperationHash = 5;
+  repeated string Cards = 6;
+  string Error = 7;
+}
+
+message Orders {
+  repeated Order Data = 1;
+}
+
+enum OrderStatus {
+  Unknown = 0;
+  Canceled = 1;
+  WaitingForPayment = 2;
+  PaymentReceived = 3;
+  Failed = 4;
+  InProgress = 5;
+  Completed = 6;
+  Opened = 7;
+}
+
+message OrderRequest {
+  string ProductID = 1;
+  PaymentMethod PaymentMethod = 2;
+  int64 Quantity = 3;
+}
+
+message UpgradeRequest {
+  string CardId = 1;
+  string UpgradeId = 2;
+  PaymentMethod PaymentMethod = 3;
+}
+
+message Receipt {
+  string TransactionHash = 3;
+  string OrderID = 1;
+}
+
+message OrderResponse {
+  string To = 1;
+  string CallData = 2;
+  Order Order = 3;
+  repeated resources.ResourceAdjustment Adjustments = 4;
+  string ChainID = 5;
+  string Value = 6;
+}
+
+enum TokenStatus {
+  TokenWaitingForMint = 0;
+  TokenSuccess = 1;
+  TokenFailed = 2;
+  TokenError = 3;
+}
+
+message PromoCodeSubmitRequest {
+  string PromoCode = 1;
+}
+
+message PromoCodeSubmitResponse {
+  bool Success = 1;
+  string Message = 2;
+  string PromoCodeTypeId = 3;
+}
+
+message TokenInfo {
+  string Token = 1;
+  TokenStatus Status = 2;
+}
+
+message OpenPackResponse {
+  repeated string Cards = 1;
+}
+
+enum MintType {
+  MintOrder = 0;
+  MintGift = 1;
+  MintUpgrade = 2;
+}
+
+message MintJobRequest {
+  base.ObjectID ID = 1;
+  MintType MintType = 2;
+}
+
+message CoinsPurchaseResult {
+  resources.ResourceAdjustment Coins = 1;
+  base.ObjectID OrderID = 2;
+}
+
+message PackPurchaseResult {
+  base.ObjectID OrderID = 1;
+  OrderStatus Status = 2;
+}
+message CardUpgradeResult {
+  base.ObjectID OrderID = 1;
+  string OriginalCardID = 2;
+  string NewCardId = 3;
+}
+
+message TokenPurchaseResult {
+  resources.ResourceAdjustment Tokens = 1;
+  base.ObjectID OrderID = 2;
+}

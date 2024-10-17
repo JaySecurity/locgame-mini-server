@@ -437,8 +437,8 @@ func (s *Service) CreateOrder(
 	} else {
 		total = fmt.Sprintf("%.2f", priceUSD)
 	}
-	
-	playerPromoCodeData := s.sessions.Get(ctx).PlayerData.ActivePromoCode
+
+	playerPromoCodeData := s.sessions.Get(id).PlayerData.ActivePromoCode
 	promoCode := playerPromoCodeData.PromoCode
 
 	order := &storeDto.Order{

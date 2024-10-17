@@ -1,0 +1,160 @@
+syntax = "proto3";
+
+package game;
+
+import "base.proto";
+import "cards.proto";
+import "resources.proto";
+import "arena.proto";
+import "friends.proto";
+import "maintenance.proto";
+
+option csharp_namespace = "LoC.DTOs.Game";
+option go_package = "locgame-mini-server/pkg/dto/game";
+
+message Configs {
+  repeated resources.ResourceData Resources = 1;
+  repeated resources.ResourceCategory ResourceCategories = 2;
+  map<int32, resources.CappedResource> CappedResources = 3;
+  map<int32, resources.ResettableResource> ResettableResources = 4;
+  map<string, cards.Card> Cards = 5;
+  map<int32, StoryModeMissionData> StoryMode = 6;
+  repeated arena.TrophyRoadRewards TrophyRoadRewards = 7;
+  map<int32, arena.LeagueData> Leagues = 8;
+  friends.FriendlyMatchConfig FriendlyMatch = 9;
+  ExtraRewards ExtraRewards = 10;
+  MatchTimer MatchTimer = 11;
+  maintenance.MaintenanceData NextMaintenance = 22;
+}
+
+message MatchmakingRequest {
+  GameType Type = 1;
+}
+
+enum GameType {
+  NoneGameType = 0;
+  QuickMatch = 1;
+  QuickMatchWithStake = 2;
+  FriendlyMatch = 3;
+  AiMatch = 4;
+}
+
+message PlayerInfo {
+  base.ObjectID ID = 1;
+  PlayerType PlayerType = 2;
+  string Name = 3;
+  string AvatarID = 4;
+}
+
+enum PlayerType {
+  Real = 0;
+  AI = 1;
+}
+
+message BeginMatch {
+  int32 CardsInDeck = 1;
+  int32 CardsInOpponentDeck = 2;
+  repeated string StartHand = 3;
+  bool PlayerTurn = 4;
+  int32 CardsInOpponentHand = 5;
+}
+
+message MatchmakingCompleteMessage {
+  string MatchID = 1;
+  PlayerInfo Opponent = 2;
+  bool IsExternalMatch = 7;
+}
+
+message MoveResult {
+  CardMove Move = 1;
+  CardPlacement Placement = 2;
+  Coordinates Destroy = 3;
+  CardChange Change = 4;
+
+  bool EndTurn = 6;
+}
+
+message CardChange {
+  Coordinates Coords = 1;
+  cards.Boosts Params = 2;
+  Coordinates Initiator = 3;
+}
+
+message CardPlacement {
+  string CardID = 1;
+  Coordinates To = 4;
+}
+
+message CardMove {
+  Coordinates From = 3;
+  Coordinates To = 4;
+}
+
+message EndOpponentTurn {
+  int32 NewCardsInHand = 1;
+  int32 CardsInDeck = 2;
+}
+
+message EndTurn {
+  repeated string NewCardsInHand = 1;
+  int32 CardsInDeck = 2;
+}
+
+message MatchResult {
+  base.ObjectID Winner = 1;
+
+  StoryModeMatchResult StoryModeMatchResult = 2;
+  arena.ArenaMatchResult ArenaMatchResult = 3;
+  friends.FriendlyMatchResult FriendlyMatchResult = 4;
+}
+
+message Move {
+  string CardID = 1;
+  MoveType MoveType = 2;
+  Coordinates From = 3;
+  Coordinates To = 4;
+}
+
+message Coordinates {
+  int32 X = 1;
+  int32 Y = 2;
+}
+
+enum MoveType {
+  NoneMoveType = 0;
+  PlaceCard = 1;
+  Attack = 2;
+  SkipMove = 3;
+}
+
+message MissionRequest {
+  int32 Mission = 1;
+}
+
+message StoryModeMissionData {
+  string BotID = 1;
+  repeated resources.ResourceAdjustment Rewards = 2;
+}
+
+message StoryModeMatchResult {
+  repeated resources.ResourceAdjustment Rewards = 2;
+}
+
+
+message ExtraRewards {
+  map<int32, resources.ResourceAdjustment> ComboAttacks = 1;
+  map<int32, resources.ResourceAdjustment> CenterStage = 2;
+  map<int32, resources.ResourceAdjustment> CardsInField = 3;
+  bool StoryMode = 4;
+  bool ArenaMode = 5;
+  bool FriendlyMode = 6;
+  bool QuickMatchMode = 7;
+}
+
+message MatchTimer {
+  int32 Duration = 1;
+  bool StoryMode = 2;
+  bool ArenaMode = 3;
+  bool FriendlyMode = 4;
+  bool QuickMode = 5;
+}

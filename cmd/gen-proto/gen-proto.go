@@ -6,7 +6,6 @@ import (
 	"go/format"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -29,7 +28,7 @@ func main() {
 			return nil
 		}
 
-		data, err := ioutil.ReadFile(path)
+		data, err := os.ReadFile(path)
 		if err != nil {
 			panic(err)
 		}
@@ -45,125 +44,15 @@ func main() {
 			res = addOmitNilToField(res, fieldName)
 		}
 
-		return ioutil.WriteFile(path, []byte(res), 0644)
+		return os.WriteFile(path, []byte(res), 0644)
 	})
 
-	unityProjectPath := os.Getenv("LOCGAME_PROTO_UNITY_PATH")
-	if unityProjectPath == "" {
-		unityProjectPath = "../locgame-client-v3/Assets/Backend/Dto"
-	}
-
-	// Generating network code
-	var networkGenCommand string
-	if _, err := os.Stat(unityProjectPath); !os.IsNotExist(err) {
-		networkGenCommand = "network-gen -csharp_client_out=" + unityProjectPath + " -go_server_out=pkg/dto proto/handlers.network"
-
-		// Generating C# proto files
-		if err := runCommand("protoc -I=proto --csharp_out " + unityProjectPath + " " + strings.Join(protoFiles, " ")); err != nil {
-			log.Fatal(err)
-		}
-	} else {
-		networkGenCommand = "network-gen -go_server_out=pkg/dto proto/handlers.network"
-	}
+	networkGenCommand := "network-gen -go_server_out=pkg/dto proto/handlers.network"
 
 	if err := runCommand(networkGenCommand); err != nil {
 		log.Fatal(err)
 	}
 
-	processAdminPanel()
-	processTestingTool()
-}
-
-func processTestingTool() {
-	if _, err := os.Stat("../locgame-testing-tool"); !os.IsNotExist(err) {
-		_ = os.RemoveAll("../locgame-testing-tool/pkg/dto")
-
-		if err := runCommand("cp -r pkg/dto ../locgame-testing-tool/pkg/dto"); err != nil {
-			log.Fatal(err)
-		}
-
-		_ = os.Remove("../locgame-testing-tool/pkg/dto/handlers.go")
-
-		if err := runCommand("network-gen -go_client_out=../locgame-testing-tool/pkg/client -file_name=router -override_go_module_name=locgame-testing-tool -override_go_package=client -proto_package_path=pkg/dto proto/handlers.network"); err != nil {
-			log.Fatal(err)
-		}
-
-		_ = filepath.Walk("../locgame-testing-tool/pkg/dto", func(path string, info fs.FileInfo, err error) error {
-			if info.IsDir() {
-				return nil
-			}
-
-			data, err := ioutil.ReadFile(path)
-			if err != nil {
-				panic(err)
-			}
-
-			res := strings.ReplaceAll(string(data), "locgame-mini-server/pkg/dto", "locgame-testing-tool/pkg/dto")
-
-			return ioutil.WriteFile(path, []byte(res), 0644)
-		})
-	}
-}
-
-func processAdminPanel() {
-	if _, err := os.Stat("../locgame-admin-panel"); !os.IsNotExist(err) {
-		if err := runCommand("cp -r pkg/dto/. ../locgame-admin-panel/server/dto"); err != nil {
-			log.Fatal(err)
-		}
-
-		_ = os.Remove("../locgame-admin-panel/server/dto/handlers.go")
-
-		_ = filepath.Walk("../locgame-admin-panel/server/dto", func(path string, info fs.FileInfo, err error) error {
-			if info.IsDir() {
-				return nil
-			}
-
-			data, err := ioutil.ReadFile(path)
-			if err != nil {
-				panic(err)
-			}
-
-			res := strings.ReplaceAll(string(data), "locgame-mini-server/pkg/dto", "locgame-admin-panel/dto")
-
-			return ioutil.WriteFile(path, []byte(res), 0644)
-		})
-
-		processAdminPanelFrontend()
-	}
-}
-
-func processAdminPanelFrontend() {
-	if err := runCommand("cp -r ../locgame-admin-panel/server/dto ../locgame-admin-panel/app"); err != nil {
-		log.Fatal(err)
-	}
-
-	_ = os.RemoveAll("../locgame-admin-panel/app/dto/errors")
-
-	_ = filepath.Walk("../locgame-admin-panel/app/dto", func(path string, info fs.FileInfo, err error) error {
-		if info.IsDir() {
-			return nil
-		}
-
-		if path == "../locgame-admin-panel/app/dto/resources/extensions.go" {
-			return nil
-		}
-
-		if strings.Contains(path, "extensions.go") {
-			_ = os.Remove(path)
-			return nil
-		}
-
-		data, err := ioutil.ReadFile(path)
-		if err != nil {
-			panic(err)
-		}
-
-		data = removeProtobufDependency(data)
-
-		res := strings.ReplaceAll(string(data), "locgame-admin-panel/dto", "locgame-admin-panel-frontend/dto")
-
-		return ioutil.WriteFile(path, []byte(res), 0644)
-	})
 }
 
 var matchStringMethod = regexp.MustCompile(`(?m)func .*$\n(.+\n)+}`)

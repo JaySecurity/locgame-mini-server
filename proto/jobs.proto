@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package proto;
+
+import "base.proto";
+
+option csharp_namespace = "LoC.DTOs.Jobs";
+option go_package = "locgame-mini-server/pkg/dto/jobs";
+option optimize_for = SPEED;
+
+enum JobStatus {
+  NotSet = 0;
+  Success = 1;
+  Running = 2;
+  Failed = 3;
+}
+
+message JobData {
+  base.ObjectID ID = 1;
+  base.ObjectID ParentJobID = 2;
+  string Name = 3;
+  uint32 Attempt = 4;
+  JobStatus Status = 5;
+  base.Timestamp StartedAt = 6;
+  base.Timestamp FinishedAt = 7;
+  string Output = 8;
+}
+
+message RecurringJobData {
+  base.ObjectID ID = 1;
+  string Name = 2;
+  string Schedule = 3;
+  base.Timestamp LastExecution = 4;
+  uint32 SuccessCount = 5;
+  uint32 ErrorCount = 6;
+  bool Disabled = 7;
+  uint32 Retries = 8;
+  JobStatus Status = 9;
+  base.Timestamp NextExecution = 10;
+}
+
+message TriggerNowMessage {
+  string JobName = 1;
+}

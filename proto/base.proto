@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package base;
+
+import "google/protobuf/descriptor.proto";
+
+option csharp_namespace = "LoC.DTOs.Base";
+option go_package = "locgame-mini-server/pkg/dto/base";
+
+message Empty {}
+
+message Int {
+  int32 Value = 1;
+}
+
+message PubSubReply {
+  bytes Data = 1;
+  string Error = 2;
+}
+
+message Timestamp {
+  int64 Seconds = 1;
+}
+
+message ObjectID{
+  string Value = 1;
+}
+
+message ServiceVersion {
+  string Version = 1;
+  string Commit = 2;
+  string Build = 3;
+}
+
+message ConfigsReloadRequest {}

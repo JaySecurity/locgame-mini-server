@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package options;
+
+import "google/protobuf/descriptor.proto";
+
+option csharp_namespace = "LoC.DTOs.Options";
+option go_package = "locgame-mini-server/pkg/dto/options";
+
+extend google.protobuf.FieldOptions {
+  optional bool HideInLog = 80412;
+}

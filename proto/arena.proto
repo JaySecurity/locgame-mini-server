@@ -1,0 +1,155 @@
+syntax = "proto3";
+
+package arena;
+
+import "base.proto";
+import "resources.proto";
+
+option csharp_namespace = "LoC.DTOs.Arena";
+option go_package = "locgame-mini-server/pkg/dto/arena";
+
+message ArenaData {
+  int32 Rating = 1;
+  int32 MaxRating = 2;
+  repeated int32 ClaimedTrophyRoadRewards = 3;
+  LeagueType League = 4;
+  ArenaState State = 5;
+  TourState TourState = 6;
+  int32 FinishedBattles = 7;
+  string SelectedDeck = 8;
+  string SelectedDeckHash = 9;
+  base.Timestamp LastSeenBattleLog = 10;
+  int32 TotalBattles = 11;
+}
+
+enum ArenaState {
+  InActive = 0;
+  Active = 1;
+}
+
+enum TourState {
+  InActiveTour = 0;
+  PaidTour = 1;
+  ActiveTour = 2;
+  LooseTour = 3;
+}
+
+enum LeagueType {
+  Bronze = 0;
+  Silver = 1;
+  Gold = 2;
+  Platinum = 3;
+  Diamond = 4;
+  Master = 5;
+}
+
+enum TicketType {
+  Free = 0;
+  Paid = 1;
+}
+
+message ArenaConfig {
+  resources.ResourceAdjustment TicketCost = 1;
+  resources.ResourceAdjustment ReviveCost = 2;
+  resources.ResourceAdjustment FreeTicketCost = 3;
+  resources.ResourceAdjustment BattleReward = 4;
+}
+
+message EnterRequest {
+  TicketType TicketType = 1;
+}
+
+message EnterResponse {
+  ArenaData ArenaData = 1;
+  repeated resources.ResourceAdjustment Cost = 2;
+}
+
+message SetAttackDeckRequest {
+  string SelectedDeck = 1;
+}
+
+message FindOpponentRequest {}
+
+message ArenaLeaderboardPlayer {
+  base.ObjectID ID = 1;
+  int32 Rank = 2;
+  string AvatarID = 3;
+  int32 League = 4;
+  string Name = 5;
+  int32 Rating = 6;
+}
+
+message ArenaMemberData {
+  base.ObjectID ID = 1;
+  string Name = 2;
+  string AvatarID = 3;
+  LeagueType League = 5;
+}
+
+message ArenaPlayerData {
+  base.ObjectID ID = 1;
+  string Name = 2;
+  string AvatarID = 3;
+  int32 Rating = 4;
+  LeagueType League = 5;
+  repeated string DefenseDeck = 6;
+}
+
+message ArenaLeaderboardResponse {
+  repeated ArenaLeaderboardPlayer Leaderboard = 1;
+  int64 TotalMembers = 2;
+}
+
+message LeagueData {
+  LeagueType Type = 1;
+  LeagueRatingData Rating = 2;
+}
+
+message LeagueRatingData {
+  int32 Min = 1;
+  int32 Max = 2;
+}
+
+message ArenaRatingChanges {
+  base.ObjectID OpponentID = 1;
+  int32 OpponentDeltaRating = 2;
+}
+
+message ArenaBattleLog {
+  ArenaMemberData Player = 1;
+  ArenaMemberData Opponent = 2;
+  int32 PlayerDeltaRating = 3;
+  int32 OpponentDeltaRating = 4;
+  base.Timestamp CreatedAt = 6;
+}
+
+message ArenaMatchResult {
+  repeated resources.ResourceAdjustment Rewards = 1;
+  int32 DeltaRating = 3;
+  int32 OldRating = 4;
+  int32 NewRating = 5;
+}
+
+message ArenaBattleLogs {
+  repeated ArenaBattleLog Logs = 1;
+}
+
+message ArenaTourRewardsResponse {
+  repeated resources.ResourceAdjustment Rewards = 1;
+  ArenaData ArenaData = 2;
+}
+
+message ClaimTrophyRoadRewardRequest {
+  int32 RewardID = 1;
+}
+
+message ClaimTrophyRoadRewardResponse {
+  repeated resources.ResourceAdjustment Reward = 1;
+  repeated int32 ClaimedRewards = 2;
+}
+
+message TrophyRoadRewards {
+  int32 ID = 1;
+  int32 Rating = 2;
+  repeated resources.ResourceAdjustment Rewards = 3;
+}

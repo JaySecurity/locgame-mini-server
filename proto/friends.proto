@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package friends;
+
+import "base.proto";
+import "accounts.proto";
+import "resources.proto";
+
+option csharp_namespace = "LoC.DTOs.Friends";
+option go_package = "locgame-mini-server/pkg/dto/friends";
+
+message FriendsData {
+  repeated accounts.UserInfo Friends = 1;
+  repeated accounts.UserInfo IncomingInvites = 2;
+  repeated accounts.UserInfo OutgoingInvites = 3;
+}
+
+message FriendChangeData {
+  FriendRequestType Type = 1;
+  base.ObjectID PlayerID = 2;
+  accounts.UserInfo UserInfo = 3;
+}
+
+enum FriendRequestType {
+  RequestReceived = 0;
+  RequestAccepted = 1;
+  RequestDeclined = 2;
+  RequestCanceled = 3;
+  FriendDeleted = 4;
+}
+
+message FriendlyMatchRequest {
+  base.ObjectID OpponentID = 1;
+  int32 Stake = 2;
+}
+
+enum FriendlyMatchDeclineReason {
+  Unknown = 0;
+  LeftTheGame = 1;
+  // TODO
+}
+
+message FriendlyMatchDecline {
+  FriendlyMatchDeclineReason Reason = 1;
+}
+
+message FriendlyMatchResult {
+  repeated resources.ResourceAdjustment Adjustments = 1;
+}
+
+message FriendlyMatchCancel {
+}
+
+message FriendlyMatchEnded {
+  repeated resources.ResourceAdjustment Adjustments = 1;
+}
+
+message FriendlyMatchAccept {
+}
+
+message FriendlyMatchData {
+  base.ObjectID PlayerID = 1;
+  base.ObjectID OpponentID = 2;
+  int32 Stake = 3;
+}
+
+message FindRequest {
+  string Query = 1;
+}
+
+message FindResponse {
+  repeated accounts.UserInfo Users = 1;
+}
+
+message FriendStatusData {
+  bool IsOnline = 1;
+  base.ObjectID FriendID = 2;
+}
+
+message FriendlyMatchConfig {
+  repeated int32 Stakes = 1;
+  float Fee = 2;
+}

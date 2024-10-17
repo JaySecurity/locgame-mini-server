@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package cards;
+
+import "base.proto";
+
+option csharp_namespace = "LoC.DTOs.Cards";
+option go_package = "locgame-mini-server/pkg/dto/cards";
+
+message Decks {
+  map<string, Deck> Decks = 1;
+  string Active = 2;
+  string Defense = 3;
+}
+
+message Deck {
+  base.ObjectID ID = 1;
+  string Name = 2;
+  int32 Picture = 3;
+  repeated string Cards = 4;
+  DeckType DeckType = 5;
+}
+
+message DecksChanges {
+  bool DefenseDeckChanged = 1;
+  string NewDefenseDeck = 2;
+  repeated string DeletedCards = 3;
+}
+
+message Card {
+  string ArchetypeID = 1;
+  string Name = 2;
+  string Description = 3;
+  string Image = 4;
+  CardProperties Properties = 5;
+  Boosts Boosts = 6;
+}
+
+message VirtualCard {
+  string ArchetypeID = 1;
+  bool Upgradable = 2;
+  repeated Option Options = 3;
+}
+
+message Option {
+  string ItemID = 1;
+  float Price = 2;
+}
+
+message CardProperties {
+  //  CardEditionSet EditionSet = 1;
+  //  Pack Pack = 2;
+  GameRarity GameRarity = 1;
+  VisualRarity VisualRarity = 2;
+}
+
+message Boosts {
+  int32 Influence = 1; // Up
+  int32 Innovation = 2; // Left
+  int32 DevSkills = 3; // Down
+  int32 Community = 4; // Right
+  int32 TopWealth = 5; // Health
+}
+
+enum GameRarity {
+  NoneGameRarity = 0;
+  Common = 1;
+  Uncommon = 2;
+  Rare = 3;
+  Epic = 4;
+}
+
+enum VisualRarity {
+  NoneVisualRarity = 0;
+  Bronze = 1;
+  Silver = 2;
+  Gold = 3;
+  Platinum = 4;
+  Legendary = 5;
+}
+
+enum DeckType {
+  Premium = 0;
+  Free = 1;
+}

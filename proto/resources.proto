@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package resources;
+
+import "base.proto";
+
+option csharp_namespace = "LoC.DTOs.Resources";
+option go_package = "locgame-mini-server/pkg/dto/resources";
+
+message ResourceData {
+  int32 ID = 1;
+  string Key = 2;
+  int32 CategoryID = 3;
+}
+
+message ResourceCategory {
+  int32 ID = 1;
+  string Key = 2;
+}
+
+message ResourceAdjustment {
+  int32 ResourceID = 1;
+  int32 Quantity = 2;
+  string Reason = 3;
+}
+
+message ResourceAdjustments {
+  repeated ResourceAdjustment Adjustments = 1;
+}
+
+message ResettableResources {
+  map<int32, ResettableResource> Resources = 1;
+}
+
+message ResettableResource {
+  int32 ResourceID = 1;
+  string ResetTime = 2;
+}
+
+message ResettableResourceData {
+  base.Timestamp NextResetTime = 1;
+}
+
+enum CapacityType {
+  SoftCapacity = 0;
+  HardCapacity = 1;
+}
+
+message CappedResource {
+  int32 ResourceID = 1;
+  CapacityType CapacityType = 2;
+  map<int32, int32> Capacities = 3;
+}
+
+message CappedResources {
+  map<int32, CappedResource> Resources = 1;
+}
+
+message WithdrawRequest {
+  int32 LC = 1;
+}
+
+message WithdrawResponse {
+  string TransactionHash = 1;
+  double LOCG = 2;
+  repeated ResourceAdjustment Adjustments = 3;
+}
