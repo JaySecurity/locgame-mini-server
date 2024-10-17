@@ -8,6 +8,11 @@ import (
 	"net/http"
 )
 
+type ErrorMsg struct {
+	Message string `json:"message"`
+	Code    string `json:"code"`
+}
+
 func (r *Router) CreateOrder(w http.ResponseWriter, req *http.Request) {
 	sessionIdCookie, err := req.Cookie("SessionID")
 	if err != nil {
@@ -16,6 +21,17 @@ func (r *Router) CreateOrder(w http.ResponseWriter, req *http.Request) {
 	}
 	sessionId := sessionIdCookie.Value
 	session := r.Sessions.Get(sessionId)
+	if session == nil {
+		log.Debug("Session Not Found")
+		errMsg := &ErrorMsg{
+			Message: "Session Not Found",
+			Code:    "ErrInvalidSession",
+		}
+		jsondata, _ := json.Marshal(errMsg)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsondata)
+		return
+	}
 	in := &storeDto.OrderRequest{}
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -54,6 +70,17 @@ func (r *Router) SendPaymentReceipt(w http.ResponseWriter, req *http.Request) {
 	}
 	sessionId := sessionIdCookie.Value
 	session := r.Sessions.Get(sessionId)
+	if session == nil {
+		log.Debug("Session Not Found")
+		errMsg := &ErrorMsg{
+			Message: "Session Not Found",
+			Code:    "ErrInvalidSession",
+		}
+		jsondata, _ := json.Marshal(errMsg)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsondata)
+		return
+	}
 	in := &storeDto.Receipt{}
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -124,4 +151,5 @@ func (r *Router) HandleStoreRoutes() {
 	})
 
 	r.Mux.HandleFunc("POST /order", r.CreateOrder)
+	r.Mux.HandleFunc("PATCH /order", r.SendPaymentReceipt)
 }

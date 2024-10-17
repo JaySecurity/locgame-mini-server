@@ -438,8 +438,12 @@ func (s *Service) CreateOrder(
 		total = fmt.Sprintf("%.2f", priceUSD)
 	}
 
+	promoCode := ""
 	playerPromoCodeData := s.sessions.Get(id).PlayerData.ActivePromoCode
-	promoCode := playerPromoCodeData.PromoCode
+	if playerPromoCodeData != nil {
+		promoCode = playerPromoCodeData.PromoCode
+	}
+	log.Debug("Promo: ", promoCode)
 
 	order := &storeDto.Order{
 		BuyerID:       session.PlayerData.ID,
