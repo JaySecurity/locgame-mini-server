@@ -3,6 +3,7 @@
 .github
 .gitignore
 .gitmodules
+.aider*
 
 .gitlab-ci.yml
 .dockerignore

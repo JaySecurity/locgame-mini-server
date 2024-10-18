@@ -45,6 +45,36 @@ services:
       - 'nats:nats'
       # - 'mongodb:mongodb'
       - 'redis:redis'
+  rest-api:
+    restart: always
+    networks:
+      - locg_app_network
+      - internal
+    image: '696215560370.dkr.ecr.eu-central-1.amazonaws.com/go-rest-api:dev'
+    ports:
+      - '53679:8080'
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT}
+      BRANCH: ${BRANCH}
+      DATABASE_DATABASE: ${DATABASE_NAME}
+      DATABASE_HOST: game-dev.icpjq.mongodb.net
+      DATABASE_PORT: '27017'
+      DATABASE_USERNAME: ${DATABASE_USERNAME}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      REDIS_HOST: locg_${BRANCH}_redis_1
+      REDIS_PORT: '6379'
+      NATS_ADDRESS: 'nats:4222'
+      NETWORK_VERBOSE_MODE: 'false'
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      BLOCKCHAIN_MINTER_PRIVATE_KEY: ${BLOCKCHAIN_MINTER_PRIVATE_KEY}
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID}
+      PAYPAL_SECRET: ${PAYPAL_SECRET}
+      OVERRIDE_CONFIG_BRANCH: ${OVERRIDE_CONFIG_BRANCH}
+    links:
+      - 'nats:nats'
+      # - 'mongodb:mongodb'
+      - 'redis:redis'
   jobs-service:
     restart: always
     networks:

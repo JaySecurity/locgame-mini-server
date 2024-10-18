@@ -11,7 +11,7 @@ ENV CGO_ENABLED=0 \
 ADD . /build/
 WORKDIR /build
 RUN go build -o /build/locg-server -ldflags "-s -w -X locgame-mini-server/internal/version.RELEASE=${CI_COMMIT_BRANCH} -X locgame-mini-server/internal/version.COMMIT=${CI_COMMIT_SHA} -X locgame-mini-server/internal/version.REPO=${CI_PROJECT_URL} -X locgame-mini-server/internal/version.BUILD=${BUILD_NUMBER}" cmd/locgame-server/server.go
-RUN go build -o /build/log-test -ldflags "-s -w -X locgame-mini-server/internal/version.RELEASE=${CI_COMMIT_BRANCH} -X locgame-mini-server/internal/version.COMMIT=${CI_COMMIT_SHA} -X locgame-mini-server/internal/version.REPO=${CI_PROJECT_URL} -X locgame-mini-server/internal/version.BUILD=${BUILD_NUMBER}" cmd/metric-test/metric-test.go
+# RUN go build -o /build/log-test -ldflags "-s -w -X locgame-mini-server/internal/version.RELEASE=${CI_COMMIT_BRANCH} -X locgame-mini-server/internal/version.COMMIT=${CI_COMMIT_SHA} -X locgame-mini-server/internal/version.REPO=${CI_PROJECT_URL} -X locgame-mini-server/internal/version.BUILD=${BUILD_NUMBER}" cmd/metric-test/metric-test.go
 
 # runtime image
 FROM alpine:3.15
@@ -21,7 +21,7 @@ RUN addgroup -g 1000 locg && adduser -u 1000 -G locg -s /bin/sh -D locg && \
     apk add --no-cache ca-certificates && \
     rm -rf /var/cache/apk/*
 COPY --chown=locg:locg --from=builder /build/locg-server /app/
-COPY --chown=locg:locg --from=builder /build/log-test /app/
+# COPY --chown=locg:locg --from=builder /build/log-test /app/
 COPY entrypoint.sh /docker-init.d/
 
 
