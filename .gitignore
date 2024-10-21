@@ -1,7 +1,6 @@
 .idea
 configs
 .DS_Store
-.devcontainer
 
 
 deploy/kubernetes/secrets

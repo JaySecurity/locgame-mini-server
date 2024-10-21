@@ -2,7 +2,7 @@
 
 variables:
   DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: ""
+  DOCKER_TLS_CERTDIR: ''
   DOCKER_REGISTRY: $DOCKER_REGISTRY
   AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
   AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
@@ -31,11 +31,11 @@ docker-build:
   stage: build
   image:
     name: amazon/aws-cli
-    entrypoint: [""]
+    entrypoint: ['']
   services:
     - name: docker:25-dind
       alias: docker
-      entrypoint: ["dockerd-entrypoint.sh", "--tls=false"]
+      entrypoint: ['dockerd-entrypoint.sh', '--tls=false']
 
   before_script:
     - amazon-linux-extras install docker
@@ -49,53 +49,17 @@ docker-build:
     - aws ecr --region eu-central-1 get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
   script:
     - docker build --build-arg CI_COMMIT_BRANCH=${CI_COMMIT_BRANCH} --build-arg CI_COMMIT_SHA=${CI_COMMIT_SHORT_SHA} --build-arg CI_PROJECT_URL=${CI_PROJECT_URL} --build-arg BUILD_NUMBER=${CI_PIPELINE_ID} -t "$DOCKER_REGISTRY:${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}" .
-    - docker build -f cmd/locgame-jobs-service/build/Dockerfile --build-arg CI_COMMIT_BRANCH=${CI_COMMIT_BRANCH} --build-arg CI_COMMIT_SHA=${CI_COMMIT_SHORT_SHA} --build-arg CI_PROJECT_URL=${CI_PROJECT_URL} --build-arg BUILD_NUMBER=${CI_PIPELINE_ID} -t "$DOCKER_REGISTRY/jobs-service:${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}" .
     - docker push "$DOCKER_REGISTRY:${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}"
-    - docker push "$DOCKER_REGISTRY/jobs-service:${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}"
   environment:
     name: $CI_COMMIT_BRANCH
   only:
     - web
     - development
-    - special
     - staging
     - production
-    - master
   except:
     - schedules
     - test-feature-branch
-
-docker-qa-build:
-  stage: build
-  image:
-    name: amazon/aws-cli
-    entrypoint: [""]
-  services:
-    - name: docker:25-dind
-      alias: docker
-      entrypoint: ["dockerd-entrypoint.sh", "--tls=false"]
-  before_script:
-    - amazon-linux-extras install docker
-    - aws --version
-    - docker info
-    - echo $CI_COMMIT_BRANCH
-    - echo $AWS_ACCESS_KEY_ID
-    - echo $AWS_SECRET_ACCESS_KEY
-    - echo $DOCKER_REGISTRY
-    - export ENVIROMENT=development
-    - export Branch=${CI_COMMIT_BRANCH}
-    - aws ecr --region eu-central-1 get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
-  script:
-    - docker build --build-arg CI_COMMIT_BRANCH=${CI_COMMIT_BRANCH} --build-arg CI_COMMIT_SHA=${CI_COMMIT_SHORT_SHA} --build-arg CI_PROJECT_URL=${CI_PROJECT_URL} --build-arg BUILD_NUMBER=${CI_PIPELINE_ID} -t "$DOCKER_REGISTRY:${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}" .
-    - docker build -f cmd/locgame-jobs-service/build/Dockerfile --build-arg CI_COMMIT_BRANCH=${CI_COMMIT_BRANCH} --build-arg CI_COMMIT_SHA=${CI_COMMIT_SHORT_SHA} --build-arg CI_PROJECT_URL=${CI_PROJECT_URL} --build-arg BUILD_NUMBER=${CI_PIPELINE_ID} -t "$DOCKER_REGISTRY/jobs-service:${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}" .
-    - docker push "$DOCKER_REGISTRY:${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}"
-    - docker push "$DOCKER_REGISTRY/jobs-service:${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}"
-  environment:
-    name: Development
-  only:
-    - test-feature-branch
-  except:
-    - schedules
 
 deploy-dev:
   stage: deploy
@@ -128,85 +92,6 @@ deploy-dev:
     - development
   except:
     - schedules
-
-deploy-custom:
-  stage: deploy
-  image: kroniak/ssh-client
-  script:
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | ssh-add -
-    - echo "export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" > env.sh
-    - echo "export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> env.sh
-    - echo "export DOCKER_REGISTRY=$DOCKER_REGISTRY" >> env.sh
-    - echo "export DATABASE_USERNAME=$DATABASE_USERNAME" >> env.sh
-    - echo "export DATABASE_PASSWORD=$DATABASE_PASSWORD" >> env.sh
-    - echo "export DATABASE_NAME=$DATABASE_NAME" >> env.sh
-    - echo "export DATABASE_NAME_GAME=$DATABASE_NAME_GAME" >> env.sh
-    - echo "export ENVIRONMENT=Development" >> env.sh
-    - echo "export PAYPAL_CLIENT_ID=$PAYPAL_CLIENT_ID" >> env.sh
-    - echo "export PAYPAL_SECRET=$PAYPAL_SECRET" >> env.sh
-    - echo "export OVERRIDE_CONFIG_BRANCH=$OVERRIDE_CONFIG_BRANCH" >> env.sh
-    - echo "export BRANCH=${CI_COMMIT_BRANCH}" >> env.sh
-    - echo "export BLOCKCHAIN_MINTER_PRIVATE_KEY=$BLOCKCHAIN_MINTER_PRIVATE_KEY" >> env.sh
-    - echo "export IMAGE_TAG=${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}" >> env.sh
-    - ssh ubuntu@$SSH_ADDRESS_DEV -o StrictHostKeyChecking=no "mkdir -p ~/locg"
-    - scp -o StrictHostKeyChecking=no env.sh ubuntu@$SSH_ADDRESS_DEV:~/locg/env.sh
-    - scp -o StrictHostKeyChecking=no -r deploy/ ubuntu@$SSH_ADDRESS_DEV:~/locg
-    - ssh ubuntu@$SSH_ADDRESS_DEV -o StrictHostKeyChecking=no "chmod +x ~/locg/env.sh"
-    - ssh ubuntu@$SSH_ADDRESS_DEV -o StrictHostKeyChecking=no "aws ecr --region eu-central-1 get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY"
-    - ssh ubuntu@$SSH_ADDRESS_DEV -o StrictHostKeyChecking=no "source ~/locg/env.sh && source ~/locg/deploy/functions.sh && locg_deploy ${CI_COMMIT_BRANCH} ${CI_COMMIT_SHORT_SHA}"
-  environment:
-    name: $CI_COMMIT_BRANCH
-    # url: https://$CI_BUILD_REF_NAME.locg.furylion.dev
-    on_stop: stop_environment
-  dependencies: []
-  only:
-    - web
-  except:
-    - master
-    - development
-    - tags
-    - schedules
-  when: manual
-
-deploy-qa:
-  stage: deploy
-  image: kroniak/ssh-client
-  script:
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | ssh-add -
-    - echo "export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" > env.sh
-    - echo "export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> env.sh
-    - echo "export DOCKER_REGISTRY=$DOCKER_REGISTRY" >> env.sh
-    - echo "export DATABASE_USERNAME=$DATABASE_USERNAME" >> env.sh
-    - echo "export DATABASE_PASSWORD=$DATABASE_PASSWORD" >> env.sh
-    - echo "export DATABASE_NAME=$DATABASE_NAME" >> env.sh
-    - echo "export DATABASE_NAME_GAME=$DATABASE_NAME_GAME" >> env.sh
-    - echo "export ENVIRONMENT=development" >> env.sh
-    - echo "export PAYPAL_CLIENT_ID=$PAYPAL_CLIENT_ID" >> env.sh
-    - echo "export PAYPAL_SECRET=$PAYPAL_SECRET" >> env.sh
-    - echo "export OVERRIDE_CONFIG_BRANCH=test" >> env.sh
-    - echo "export BRANCH=${CI_COMMIT_BRANCH}" >> env.sh
-    - echo "export BLOCKCHAIN_MINTER_PRIVATE_KEY=$BLOCKCHAIN_MINTER_PRIVATE_KEY" >> env.sh
-    - echo "export IMAGE_TAG=${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}" >> env.sh
-    - ssh ubuntu@$SSH_ADDRESS_DEV -o StrictHostKeyChecking=no "mkdir -p ~/locg"
-    - scp -o StrictHostKeyChecking=no env.sh ubuntu@$SSH_ADDRESS_DEV:~/locg/env.sh
-    - scp -o StrictHostKeyChecking=no -r deploy/ ubuntu@$SSH_ADDRESS_DEV:~/locg
-    - ssh ubuntu@$SSH_ADDRESS_DEV -o StrictHostKeyChecking=no "chmod +x ~/locg/env.sh"
-    - ssh ubuntu@$SSH_ADDRESS_DEV -o StrictHostKeyChecking=no "aws ecr --region eu-central-1 get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY"
-    - ssh ubuntu@$SSH_ADDRESS_DEV -o StrictHostKeyChecking=no "source ~/locg/env.sh && source ~/locg/deploy/functions.sh && locg_deploy ${CI_COMMIT_BRANCH} ${CI_COMMIT_SHORT_SHA}"
-  environment:
-    name: Development
-    # url: https://$CI_BUILD_REF_NAME.locg.furylion.dev
-  dependencies: []
-  only:
-    - test-feature-branch
-  except:
-    - master
-    - development
-    - tags
-    - schedules
-  when: manual
 
 stop_environment:
   stage: deploy

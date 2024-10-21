@@ -1,0 +1,30 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/go
+{
+  "name": "Go",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "image": "mcr.microsoft.com/devcontainers/go:1-1.23-bullseye",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/node:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.remote-server",
+        "ms-vscode-remote.vscode-remote-extensionpack",
+        "ms-vscode-remote.remote-containers",
+        "ms-vscode-remote.remote-ssh",
+        "zxh404.vscode-proto3",
+        "eamodio.gitlens"
+      ]
+    }
+  },
+  "runArgs": ["--env-file", "${localWorkspaceFolder}/.env", "--network=host"],
+  "postCreateCommand": {
+    "GoTidy": "go mod tidy",
+    "DockerUp": "docker-compose -f ./.devcontainer/docker-compose.yaml --project-name locg_development up -d",
+    "NPM": "npm install -g nodemon",
+    "Alias": "echo alias gorun=\\'nodemon --exec go run ./cmd/locgame-server/server.go --signal SIGTERM\\' >> /home/vscode/.zshrc"
+  }
+}
