@@ -1,7 +1,7 @@
 .idea
 configs
 .DS_Store
-
+.env
 
 deploy/kubernetes/secrets
 metrics.txt

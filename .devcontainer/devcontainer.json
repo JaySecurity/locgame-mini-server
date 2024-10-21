@@ -20,7 +20,7 @@
       ]
     }
   },
-  "runArgs": ["--env-file", "${localWorkspaceFolder}/.env", "--network=host"],
+  "runArgs": ["--env-file", ".devcontainer/.env", "--network=host"],
   "postCreateCommand": {
     "GoTidy": "go mod tidy",
     "DockerUp": "docker-compose -f ./.devcontainer/docker-compose.yaml --project-name locg_development up -d",
