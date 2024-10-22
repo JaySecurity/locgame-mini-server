@@ -9,6 +9,11 @@ import (
 )
 
 func (r *Router) Web3ChallengeRequest(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+	w.Header().Set("Content-Type", "application/json")
+
 	in := &accounts.Web3AuthRequest{}
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -36,6 +41,11 @@ func (r *Router) Web3ChallengeRequest(w http.ResponseWriter, req *http.Request) 
 }
 
 func (r *Router) FakeWeb3Authorize(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+	w.Header().Set("Content-Type", "application/json")
+
 	in := &accounts.Web3AuthRequest{}
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -68,6 +78,11 @@ func (r *Router) FakeWeb3Authorize(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *Router) Web3Authorize(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+	w.Header().Set("Content-Type", "application/json")
+
 	in := &accounts.Web3Signature{}
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -115,7 +130,7 @@ func (r *Router) SendLoginEmail(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-	w.Header().Set("Content-Type", "application/text")
+	w.Header().Set("Content-Type", "application/json")
 	var loginRequest accounts.LoginEmailRequest
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -146,7 +161,7 @@ func (r *Router) VerifyLoginEmail(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-	w.Header().Set("Content-Type", "application/text")
+	w.Header().Set("Content-Type", "application/json")
 	verifyRequest := &accounts.VerifyLoginEmailRequest{}
 
 	body, err := io.ReadAll(req.Body)
@@ -194,7 +209,7 @@ func (r *Router) HandleAccountRoutes() {
 		w.Header().Set("Access-Control-Allow-Methods", "GET")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
-		w.Header().Set("Content-Type", "application/text")
+		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte("Accounts"))
 	})
 	r.Mux.HandleFunc("/account/login/email", r.SendLoginEmail)
