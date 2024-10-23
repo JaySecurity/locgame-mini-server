@@ -57,7 +57,7 @@ func main() {
 	mux := r.Mux
 
 	addr := fmt.Sprintf(":%d", cfg.HttpPort)
-	log.Debugf("Waiting for incoming connections to wss://0.0.0.0%s/ws ...", addr)
+	log.Debugf("API running at https://0.0.0.0%s ...", addr)
 
 	s := &http.Server{Addr: addr, Handler: mux}
 

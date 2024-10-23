@@ -81,7 +81,8 @@ function locg_deploy() {
         fi
     fi
     
-    
+    echo SERVICE: $SERVICE_PORT
+    echo REST: $REST_PORT
     
     echo "Creating internal network..."
     docker network create internal_${BUILD_ENVIRONMENT}
