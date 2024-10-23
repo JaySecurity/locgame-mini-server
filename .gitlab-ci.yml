@@ -43,13 +43,11 @@ docker-build:
     - docker --version
     - docker info
     - echo $CI_COMMIT_BRANCH
-    - echo $AWS_ACCESS_KEY_ID
-    - echo $AWS_SECRET_ACCESS_KEY
     - echo $DOCKER_REGISTRY
     - aws ecr --region eu-central-1 get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
   script:
-    - docker build --build-arg CI_COMMIT_BRANCH=${CI_COMMIT_BRANCH} --build-arg CI_COMMIT_SHA=${CI_COMMIT_SHORT_SHA} --build-arg CI_PROJECT_URL=${CI_PROJECT_URL} --build-arg BUILD_NUMBER=${CI_PIPELINE_ID} -t "$DOCKER_REGISTRY:${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}" .
-    - docker push "$DOCKER_REGISTRY:${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}"
+    - docker build --build-arg CI_COMMIT_BRANCH=${CI_COMMIT_BRANCH} --build-arg CI_COMMIT_SHA=${CI_COMMIT_SHORT_SHA} --build-arg CI_PROJECT_URL=${CI_PROJECT_URL} --build-arg BUILD_NUMBER=${CI_PIPELINE_ID} -t "$DOCKER_REGISTRY:${CI_COMMIT_BRANCH}-latest" .
+    - docker push "$DOCKER_REGISTRY:${CI_COMMIT_BRANCH}-latest"
   environment:
     name: $CI_COMMIT_BRANCH
   only:
@@ -77,7 +75,7 @@ deploy-dev:
     - echo "export PAYPAL_CLIENT_ID=$PAYPAL_CLIENT_ID" >> env.sh
     - echo "export PAYPAL_SECRET=$PAYPAL_SECRET" >> env.sh
     - echo "export BLOCKCHAIN_MINTER_PRIVATE_KEY=$BLOCKCHAIN_MINTER_PRIVATE_KEY" >> env.sh
-    - echo "export IMAGE_TAG=${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}" >> env.sh
+    - echo "export IMAGE_TAG=${CI_COMMIT_BRANCH}-latest" >> env.sh
     - echo "export BRANCH=development" >> env.sh
     - ssh ubuntu@$SSH_ADDRESS_DEV -o StrictHostKeyChecking=no "mkdir -p ~/locg"
     - scp -o StrictHostKeyChecking=no env.sh ubuntu@$SSH_ADDRESS_DEV:~/locg/env.sh

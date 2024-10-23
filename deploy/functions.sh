@@ -1,7 +1,7 @@
 export ENVIRONMENT
 export VERSION
-export HTTP_PORT
-# export MONGODB_PORT
+export SERVICE_PORT
+export REST_PORT
 export REDIS_PORT
 export NATS_PORT
 
@@ -15,8 +15,8 @@ function get_available_port() {
 #     VERSION=$2
 
 
-#     # HTTP_PORT=$(get_available_port)
-#     HTTP_PORT=56377
+#     # SERVICE_PORT=$(get_available_port)
+#     SERVICE_PORT=56377
 #     # MONGODB_PORT=$(get_available_port)
 #     REDIS_PORT=$(get_available_port)
 #     NATS_PORT=$(get_available_port)
@@ -29,16 +29,16 @@ function get_available_port() {
 #     # shellcheck disable=SC2143
 #     if [[ $(docker ps -a | grep locg_"${ENVIRONMENT}"_service_1) ]]; then
 #         echo "Environment already exists. Deploying with saving the last ports."
-#         HTTP_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"8080/tcp\") 0) \"HostPort\"}}" locg_"${ENVIRONMENT}"_service_1)
+#         SERVICE_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"8080/tcp\") 0) \"HostPort\"}}" locg_"${ENVIRONMENT}"_service_1)
 #         # MONGODB_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"27017/tcp\") 0) \"HostPort\"}}" locg_"${ENVIRONMENT}"_mongodb_1)
 #         REDIS_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"6379/tcp\") 0) \"HostPort\"}}" locg_"${ENVIRONMENT}"_redis_1)
 #         NATS_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"4222/tcp\") 0) \"HostPort\"}}" locg_"${ENVIRONMENT}"_nats_1)
 
-#         # if [[ "$HTTP_PORT" =~ ^[0-9]+$ ]]; then
+#         # if [[ "$SERVICE_PORT" =~ ^[0-9]+$ ]]; then
 #         #   echo "HTTP port: OK"
 #         # else
-#         #   echo "Unable get HTTP port: $HTTP_PORT"
-#         #   HTTP_PORT=$(get_available_port)
+#         #   echo "Unable get HTTP port: $SERVICE_PORT"
+#         #   SERVICE_PORT=$(get_available_port)
 #         # fi
 
 #         # if [[ "$MONGODB_PORT" =~ ^[0-9]+$ ]]; then
@@ -89,8 +89,8 @@ function locg_delete_environment() {
     echo "Deleting Existing Environment... "
     ENVIRONMENT=$1
     
-    HTTP_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"8080/tcp\") 0) \"HostPort\"}}" locg_"${ENVIRONMENT}"_service_1)
-    # MONGODB_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"27017/tcp\") 0) \"HostPort\"}}" locg_"${ENVIRONMENT}"_mongodb_1)
+    SERVICE_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"8080/tcp\") 0) \"HostPort\"}}" locg_"${ENVIRONMENT}"_service_1)
+    REST_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"27017/tcp\") 0) \"HostPort\"}}" locg_"${ENVIRONMENT}"_rest-api_1)
     REDIS_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"6379/tcp\") 0) \"HostPort\"}}" locg_"${ENVIRONMENT}"_redis_1)
     NATS_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"4222/tcp\") 0) \"HostPort\"}}" locg_"${ENVIRONMENT}"_nats_1)
     
@@ -109,14 +109,16 @@ function locg_deploy() {
     BUILD_ENVIRONMENT=$1
     VERSION=$2
     
-    if [[ "$BUILD_ENVIRONMENT" == "development" ]]; then
-        HTTP_PORT=53677
-        elif [[ "$BUILD_ENVIRONMENT" == "special" ]]; then
-        HTTP_PORT=53678
-    else
-        HTTP_PORT=53679
-    fi
+    # if [[ "$BUILD_ENVIRONMENT" == "development" ]]; then
+    #     SERVICE_PORT=53677
+    #     elif [[ "$BUILD_ENVIRONMENT" == "special" ]]; then
+    #     SERVICE_PORT=53678
+    # else
+    #     SERVICE_PORT=53679
+    # fi
     
+    SERVICE_PORT=$(get_available_port)
+    REST_PORT=$(get_available_port)
     REDIS_PORT=$(get_available_port)
     NATS_PORT=$(get_available_port)
     
@@ -128,24 +130,24 @@ function locg_deploy() {
     # shellcheck disable=SC2143
     if [[ $(docker ps -a | grep locg_"${BUILD_ENVIRONMENT}"_service_1) ]]; then
         echo "BUILD_Environment already exists. Deploying with saving the last ports."
-        # HTTP_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"8080/tcp\") 0) \"HostPort\"}}" locg_"${BUILD_ENVIRONMENT}"_service_1)
-        # MONGODB_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"27017/tcp\") 0) \"HostPort\"}}" locg_"${BUILD_ENVIRONMENT}"_mongodb_1)
+        SERVICE_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"8080/tcp\") 0) \"HostPort\"}}" locg_"${BUILD_ENVIRONMENT}"_service_1)
+        REST_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"27017/tcp\") 0) \"HostPort\"}}" locg_"${BUILD_ENVIRONMENT}"_rest-api_1)
         REDIS_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"6379/tcp\") 0) \"HostPort\"}}" locg_"${BUILD_ENVIRONMENT}"_redis_1)
         NATS_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"4222/tcp\") 0) \"HostPort\"}}" locg_"${BUILD_ENVIRONMENT}"_nats_1)
         
-        if [[ "$HTTP_PORT" =~ ^[0-9]+$ ]]; then
+        if [[ "$SERVICE_PORT" =~ ^[0-9]+$ ]]; then
             echo "HTTP port: OK"
         else
-            echo "Unable get HTTP port: $HTTP_PORT"
-            HTTP_PORT=$(get_available_port)
+            echo "Unable get HTTP port: $SERVICE_PORT"
+            SERVICE_PORT=$(get_available_port)
         fi
         
-        # if [[ "$MONGODB_PORT" =~ ^[0-9]+$ ]]; then
-        #   echo "MongoDB port: OK"
-        # else
-        #   echo "Unable get MongoDB port: $MONGODB_PORT"
-        #   MONGODB_PORT=$(get_available_port)
-        # fi
+        if [[ "$REST_PORT" =~ ^[0-9]+$ ]]; then
+            echo "MongoDB port: OK"
+        else
+            echo "Unable get Rest API port: $REST_PORT"
+            REST_PORT=$(get_available_port)
+        fi
         
         if [[ "$REDIS_PORT" =~ ^[0-9]+$ ]]; then
             echo "Redis port: OK"

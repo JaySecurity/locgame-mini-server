@@ -3,14 +3,14 @@ services:
   nats:
     restart: always
     networks:
-      - locg_app_network
+      - internal
     image: 'nats:alpine'
     ports:
       - '${NATS_PORT}:4222'
   redis:
     restart: always
     networks:
-      - locg_app_network
+      - internal
     image: 'redis:alpine'
     ports:
       - '${REDIS_PORT}:6379'
@@ -18,11 +18,17 @@ services:
   service:
     restart: always
     networks:
-      - locg_app_network
+      - traefik
       - internal
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.service.rule=Host(`jay.game.locgame.io`)'
+      - 'traefik.http.routers.service.entrypoints=websecure'
+      - 'traefik.http.routers.service.tls=true'
+      - 'traefik.http.routers.service.tls.certresolver=myresolver'
     image: '696215560370.dkr.ecr.eu-central-1.amazonaws.com/game-backend-dev:${IMAGE_TAG}'
     ports:
-      - '${HTTP_PORT}:8080'
+      - '${SERVICE_PORT}:8080'
     environment:
       ENVIRONMENT: ${ENVIRONMENT}
       BRANCH: ${BRANCH}
@@ -48,11 +54,17 @@ services:
   rest-api:
     restart: always
     networks:
-      - locg_app_network
+      - traefik
       - internal
-    image: '696215560370.dkr.ecr.eu-central-1.amazonaws.com/go-rest-api:dev'
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.rest.rule=Host(`feature.game.locgame.io`)'
+      - 'traefik.http.routers.rest.entrypoints=websecure'
+      - 'traefik.http.routers.rest.tls=true'
+      - 'traefik.http.routers.rest.tls.certresolver=myresolver'
+    image: '696215560370.dkr.ecr.eu-central-1.amazonaws.com/go-rest-api:${IMAGE_TAG}'
     ports:
-      - '53679:8080'
+      - '${REST_PORT}:8080'
     environment:
       ENVIRONMENT: ${ENVIRONMENT}
       BRANCH: ${BRANCH}
@@ -78,7 +90,7 @@ services:
   jobs-service:
     restart: always
     networks:
-      - locg_app_network
+      - internal
     image: '696215560370.dkr.ecr.eu-central-1.amazonaws.com/game-backend-dev/jobs-service:${IMAGE_TAG}'
     environment:
       DATABASE_DATABASE: ${DATABASE_NAME}
@@ -102,11 +114,13 @@ services:
       - 'nats:nats'
       - 'redis:redis'
 networks:
-  locg_app_network:
-    name: 'locg_${BRANCH}_network'
-    driver: bridge
-    driver_opts:
-      com.docker.network.bridge.enable_ip_masquerade: 'true'
+  # locg_app_network:
+  #   name: 'locg_${BRANCH}_network'
+  #   driver: bridge
+  #   driver_opts:
+  #     com.docker.network.bridge.enable_ip_masquerade: 'true'
+  traefik:
+    external: true
   internal:
     name: 'internal_${BRANCH}'
-    external: true
+    # external: true
