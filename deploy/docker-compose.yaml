@@ -22,7 +22,7 @@ services:
       - internal
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.service.rule=Host(`jay.game.locgame.io`)'
+      - 'traefik.http.routers.service.rule=Host(`game.locgame.io`)'
       - 'traefik.http.routers.service.entrypoints=websecure'
       - 'traefik.http.routers.service.tls=true'
       - 'traefik.http.routers.service.tls.certresolver=myresolver'
@@ -49,7 +49,6 @@ services:
       OVERRIDE_CONFIG_BRANCH: ${OVERRIDE_CONFIG_BRANCH}
     links:
       - 'nats:nats'
-      # - 'mongodb:mongodb'
       - 'redis:redis'
   rest-api:
     restart: always
@@ -58,7 +57,7 @@ services:
       - internal
     labels:
       - 'traefik.enable=true'
-      - 'traefik.http.routers.rest.rule=Host(`feature.game.locgame.io`)'
+      - 'traefik.http.routers.rest.rule=Host(`rest.game.locgame.io`)'
       - 'traefik.http.routers.rest.entrypoints=websecure'
       - 'traefik.http.routers.rest.tls=true'
       - 'traefik.http.routers.rest.tls.certresolver=myresolver'
@@ -85,7 +84,6 @@ services:
       OVERRIDE_CONFIG_BRANCH: ${OVERRIDE_CONFIG_BRANCH}
     links:
       - 'nats:nats'
-      # - 'mongodb:mongodb'
       - 'redis:redis'
   jobs-service:
     restart: always

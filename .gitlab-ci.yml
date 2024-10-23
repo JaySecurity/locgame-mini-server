@@ -88,6 +88,7 @@ deploy-dev:
     name: development
   only:
     - development
+  when: manual
   except:
     - schedules
 
@@ -105,6 +106,7 @@ stop_environment:
   dependencies: []
   only:
     - web
+    - development
   except:
     - master
     - tags
