@@ -14,7 +14,6 @@ variables:
   VERIFY_CHECKSUM: 'false'
   DOCKER_HOST: $DOCKER_HOST
   DATABASE_NAME: $DATABASE_NAME
-  DATABASE_HOST: $DATABASE_HOST
   DATABASE_NAME_GAME: $DATABASE_NAME_GAME
   DATABASE_USERNAME: $DATABASE_USERNAME
   DATABASE_PASSWORD: $DATABASE_PASSWORD
@@ -71,25 +70,24 @@ deploy-dev:
     - echo "export DOCKER_REGISTRY=$DOCKER_REGISTRY" >> env.sh
     - echo "export DATABASE_USERNAME=$DATABASE_USERNAME" >> env.sh
     - echo "export DATABASE_PASSWORD=$DATABASE_PASSWORD" >> env.sh
-    - echo "export DATABASE_HOST=$DATABASE_HOST" >> env.sh
     - echo "export DATABASE_NAME=$DATABASE_NAME" >> env.sh
+    - echo "export DATABASE_NAME_GAME=$DATABASE_NAME_GAME" >> env.sh
     - echo "export PAYPAL_CLIENT_ID=$PAYPAL_CLIENT_ID" >> env.sh
     - echo "export PAYPAL_SECRET=$PAYPAL_SECRET" >> env.sh
     - echo "export BLOCKCHAIN_MINTER_PRIVATE_KEY=$BLOCKCHAIN_MINTER_PRIVATE_KEY" >> env.sh
     - echo "export IMAGE_TAG=${CI_COMMIT_BRANCH}-latest" >> env.sh
-    - echo "export BRANCH=${CI_COMMIT_BRANCH}" >> env.sh
-    - ssh ubuntu@$SSH_ADDRESS -o StrictHostKeyChecking=no "mkdir -p ~/locg"
-    - scp -o StrictHostKeyChecking=no env.sh ubuntu@$SSH_ADDRESS:~/locg/env.sh
-    - scp -o StrictHostKeyChecking=no -r deploy/ ubuntu@$SSH_ADDRESS:~/locg
-    - ssh ubuntu@$SSH_ADDRESS -o StrictHostKeyChecking=no "chmod +x ~/locg/env.sh"
-    - ssh ubuntu@$SSH_ADDRESS -o StrictHostKeyChecking=no "aws ecr --region eu-central-1 get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY"
-    - ssh ubuntu@$SSH_ADDRESS -o StrictHostKeyChecking=no "source ~/locg/env.sh && source ~/locg/deploy/functions.sh && locg_delete_environment development && locg_deploy development ${CI_COMMIT_SHORT_SHA}"
+    - echo "export BRANCH=development" >> env.sh
+    - ssh ubuntu@$SSH_ADDRESS_DEV -o StrictHostKeyChecking=no "mkdir -p ~/locg"
+    - scp -o StrictHostKeyChecking=no env.sh ubuntu@$SSH_ADDRESS_DEV:~/locg/env.sh
+    - scp -o StrictHostKeyChecking=no -r deploy/ ubuntu@$SSH_ADDRESS_DEV:~/locg
+    - ssh ubuntu@$SSH_ADDRESS_DEV -o StrictHostKeyChecking=no "chmod +x ~/locg/env.sh"
+    - ssh ubuntu@$SSH_ADDRESS_DEV -o StrictHostKeyChecking=no "aws ecr --region eu-central-1 get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY"
+    - ssh ubuntu@$SSH_ADDRESS_DEV -o StrictHostKeyChecking=no "source ~/locg/env.sh && source ~/locg/deploy/functions.sh && locg_delete_environment development && locg_deploy development ${CI_COMMIT_SHORT_SHA}"
   dependencies: []
   environment:
-    name: ${CI_COMMIT_BRANCH}
+    name: development
   only:
     - development
-    - production
   when: manual
   except:
     - schedules
@@ -100,18 +98,49 @@ stop_environment:
   script:
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | ssh-add -
-    - scp -o StrictHostKeyChecking=no -r deploy/ ubuntu@$SSH_ADDRESS:~/locg
-    - ssh ubuntu@$SSH_ADDRESS -o StrictHostKeyChecking=no "source ~/locg/deploy/functions.sh && locg_delete_environment ${CI_COMMIT_BRANCH}"
+    - scp -o StrictHostKeyChecking=no -r deploy/ ubuntu@$SSH_ADDRESS_DEV:~/locg
+    - ssh ubuntu@$SSH_ADDRESS_DEV -o StrictHostKeyChecking=no "source ~/locg/deploy/functions.sh && locg_delete_environment ${CI_COMMIT_BRANCH}"
   environment:
     name: $CI_COMMIT_BRANCH
     action: stop
   dependencies: []
   only:
     - web
-    - production
     - development
   except:
+    - master
     - tags
     - schedules
   when: manual
 
+docker-deploy-eks:
+  stage: deploy
+  image:
+    name: amazon/aws-cli
+    entrypoint: ['']
+  services:
+    - docker:latest
+  before_script:
+    - amazon-linux-extras install docker
+    - yum install -y tar
+    - aws --version
+    - docker --version
+    - curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+    - chmod +x ./kubectl
+    - mv ./kubectl /usr/local/bin
+    - kubectl version --client
+    - aws eks update-kubeconfig --region $AWS_DEFAULT_REGION --name $AWS_CLUSTER_NAME
+    - aws ecr --region eu-central-1 get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
+  script:
+    - kubectl set image -n $NAMESPACE  deployment/locg-jobs-service locg-jobs-service=$DOCKER_REGISTRY/jobs-service:${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}
+    - kubectl set image -n $NAMESPACE  deployment/locg-service locg-service=$DOCKER_REGISTRY:${CI_COMMIT_BRANCH}-${CI_COMMIT_SHORT_SHA}
+    - kubectl rollout status -w -n $NAMESPACE deployment/locg-service
+    - kubectl rollout status -w -n $NAMESPACE deployment/locg-jobs-service
+
+  environment:
+    name: $CI_COMMIT_BRANCH
+  only:
+    - staging
+    - production
+  except:
+    - schedules
