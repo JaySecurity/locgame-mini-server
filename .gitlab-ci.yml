@@ -42,8 +42,8 @@ docker-build:
     - amazon-linux-extras install docker
     - aws --version
     - docker --version
-    - docker info
     - echo $CI_COMMIT_BRANCH
+    - aws sts get-session-token
     - echo $DOCKER_REGISTRY
     - aws ecr --region eu-central-1 get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
   script:
