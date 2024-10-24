@@ -18,7 +18,7 @@ services:
   service:
     restart: always
     networks:
-      - locg_${BRANCH}_network
+      - locg_app_network
       - internal
     image: '696215560370.dkr.ecr.eu-central-1.amazonaws.com/game-backend-dev:${IMAGE_TAG}'
     ports:
@@ -47,11 +47,10 @@ services:
   rest-api:
     restart: always
     networks:
-      - locg_${BRANCH}_network
+      - locg_app_network
       - internal
     image: '696215560370.dkr.ecr.eu-central-1.amazonaws.com/go-rest-api:${IMAGE_TAG}'
     ports:
-      - '${REST_PORT}:8080'
     environment:
       ENVIRONMENT: ${ENVIRONMENT}
       BRANCH: ${BRANCH}

@@ -85,6 +85,7 @@ func New(cfg *config.Config, store *store.Store) *Router {
 	s.HandleStoreRoutes()
 	s.HandlePaymentRoutes()
 	s.Mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("Welcome to LoC REST API Server."))
 	})
 	return s
