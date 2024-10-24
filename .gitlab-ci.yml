@@ -43,6 +43,8 @@ docker-build:
     - aws --version
     - docker --version
     - echo $CI_COMMIT_BRANCH
+    - echo $AWS_ACCESS_KEY_ID
+    - echo $AWS_SECRET_ACCESS_KEY
     - aws sts get-session-token
     - echo $DOCKER_REGISTRY
     - aws ecr --region eu-central-1 get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY
