@@ -12,6 +12,8 @@ import (
 	"math/rand"
 	"strings"
 	"time"
+
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // SendLoginEmail sends a login code to the user.
@@ -78,18 +80,19 @@ func (s *Service) VerifyLoginEmail(request *accounts.VerifyLoginEmailRequest) (*
 	}
 	if len(sessionInfo) > 2 {
 		ctx := context.Background()
-		wallet := sessionInfo[2]
+		wallet := strings.ToLower(sessionInfo[2])
 		accountId, err := s.store.Players.GetAccountIDByWallet(ctx, wallet)
-		if err != nil {
-			return nil, nil, errors.ErrUserNotFound
-		}
-		err = s.store.Players.SetData(ctx, accountId, &player.PlayerData{Email: email})
-		if err != nil {
-			return nil, nil, err
+		if err != nil && err != mongo.ErrNoDocuments {
+			return nil, nil, errors.ErrSessionNotFound
+		} else if !accountId.IsZero() {
+			err = s.store.Players.SetData(ctx, accountId, &player.PlayerData{Email: email})
+			if err != nil {
+				return nil, nil, err
+			}
 		}
 	}
 
-	session, err := s.NewSessionBuilder(ctx, s.config).SetEmailAddress(email).SetIsMetaMaskUser(isMetaMask).CreateSession().Build()
+	session, err := s.NewSessionBuilder(ctx, s.config).SetEmailAddress(email).SetIsMetaMaskUser(isMetaMask).SetWallet(data.Wallet).CreateSession().Build()
 	if err != nil {
 		log.Error(fmt.Sprintf("failed to create session: %v", err))
 		return nil, nil, err

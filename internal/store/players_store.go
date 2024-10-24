@@ -153,7 +153,7 @@ func (s *PlayersStore) GetAccountIDByWallet(ctx context.Context, address string)
 		ID primitive.ObjectID `bson:"_id"`
 	}{}
 
-	err := s.collection.FindOne(ctx, bson.M{"$or": []bson.M{{"external_wallet": address}, {"wallet": address}}}, options.FindOne().SetProjection(bson.M{"_id": 1})).Decode(&identifier)
+	err := s.collection.FindOne(ctx, bson.M{"$or": []bson.M{{"external_wallet": address}, {"active_wallet": address}, {"wallet": address}}}, options.FindOne().SetProjection(bson.M{"_id": 1})).Decode(&identifier)
 	if err != nil {
 		return primitive.ObjectID{}, err
 	}
