@@ -97,7 +97,7 @@ func (s *Store) ConnectRedis() *redis.Client {
 
 // ConnectDatabase allows connecting to the database.
 func (s *Store) ConnectDatabase() *mongo.Client {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	reg := bsonutils.Register(bson.NewRegistryBuilder()).Build()
@@ -106,7 +106,7 @@ func (s *Store) ConnectDatabase() *mongo.Client {
 		log.Fatal("Unable to connect to database:", err)
 	}
 
-	ctx, cancel = context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel = context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	err = client.Ping(ctx, readpref.Primary())
 	if err != nil {
