@@ -83,7 +83,7 @@ deploy-dev:
     - scp -o StrictHostKeyChecking=no -r deploy/ ubuntu@$SSH_ADDRESS:~/locg
     - ssh ubuntu@$SSH_ADDRESS -o StrictHostKeyChecking=no "chmod +x ~/locg/env.sh"
     - ssh ubuntu@$SSH_ADDRESS -o StrictHostKeyChecking=no "aws ecr --region eu-central-1 get-login-password | docker login --username AWS --password-stdin $DOCKER_REGISTRY"
-    - ssh ubuntu@$SSH_ADDRESS -o StrictHostKeyChecking=no "source ~/locg/env.sh && source ~/locg/deploy/functions.sh && locg_delete_environment development && locg_deploy development ${CI_COMMIT_SHORT_SHA}"
+    - ssh ubuntu@$SSH_ADDRESS -o StrictHostKeyChecking=no "source ~/locg/env.sh && source ~/locg/deploy/functions.sh && locg_delete_environment ${CI_COMMIT_BRANCH} && locg_deploy ${CI_COMMIT_BRANCH} ${CI_COMMIT_SHORT_SHA}"
   dependencies: []
   environment:
     name: ${CI_COMMIT_BRANCH}
