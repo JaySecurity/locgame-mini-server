@@ -78,9 +78,7 @@ func New(cfg *config.Config, store *store.Store) *Router {
 
 	s.InGameStore.Init()
 
-	// webhook := webhooks.NewWebhook(cfg, r.Payments, dataStore)
-
-	// mux.Handle("/webhooks/", http.StripPrefix("/webhooks", webhook.Mux))
+	// Add Middleware
 	s.HandleAccountRoutes()
 	s.HandleStoreRoutes()
 	s.HandlePaymentRoutes()

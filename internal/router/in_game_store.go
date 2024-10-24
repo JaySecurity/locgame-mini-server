@@ -3,6 +3,7 @@ package router
 import (
 	"encoding/json"
 	"io"
+	"locgame-mini-server/internal/middleware"
 	storeDto "locgame-mini-server/pkg/dto/store"
 	"locgame-mini-server/pkg/log"
 	"net/http"
@@ -56,6 +57,26 @@ func (r *Router) CreateOrder(w http.ResponseWriter, req *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
+}
+
+func (r *Router) getStoreData(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+	data, err := r.InGameStore.GetData(req.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	log.Debug("Store data:", data.Tokens[0].Available)
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write(jsonData)
 }
 
 // func (r *Router) CreateUpgradeOrder(client *network.Client, in *storeDto.UpgradeRequest) (*storeDto.OrderResponse, error) {
@@ -130,26 +151,7 @@ func (r *Router) SendPaymentReceipt(w http.ResponseWriter, req *http.Request) {
 // Store data route
 func (r *Router) HandleStoreRoutes() {
 	// Get Store Data
-	r.Mux.HandleFunc("/store", func(w http.ResponseWriter, req *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-
-		data, err := r.InGameStore.GetData(req.Context())
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		log.Debug("Store data:", data.Tokens[0].Available)
-		jsonData, err := json.Marshal(data)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write(jsonData)
-	})
-
-	r.Mux.HandleFunc("POST /order", r.CreateOrder)
-	r.Mux.HandleFunc("PATCH /order", r.SendPaymentReceipt)
+	r.Mux.HandleFunc("/store", middleware.Log(r.getStoreData))
+	r.Mux.HandleFunc("POST /order", middleware.Log(r.CreateOrder))
+	r.Mux.HandleFunc("PATCH /order", middleware.Log(r.SendPaymentReceipt))
 }

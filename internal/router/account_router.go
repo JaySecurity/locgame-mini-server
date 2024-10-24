@@ -3,6 +3,7 @@ package router
 import (
 	"encoding/json"
 	"io"
+	"locgame-mini-server/internal/middleware"
 	"locgame-mini-server/pkg/dto/accounts"
 	"locgame-mini-server/pkg/log"
 	"net/http"
@@ -197,9 +198,9 @@ func (r *Router) HandleAccountRoutes() {
 		w.Header().Set("Content-Type", "application/text")
 		_, _ = w.Write([]byte("Accounts"))
 	})
-	r.Mux.HandleFunc("/account/login/email", r.SendLoginEmail)
-	r.Mux.HandleFunc("/account/login/verifyemail", r.VerifyLoginEmail)
-	r.Mux.HandleFunc("/account/login/wallet", r.Web3ChallengeRequest)
-	r.Mux.HandleFunc("/account/login/fakewallet", r.FakeWeb3Authorize)
-	r.Mux.HandleFunc("/account/login/verifywallet", r.Web3Authorize)
+	r.Mux.HandleFunc("/account/login/email", middleware.Log(r.SendLoginEmail))
+	r.Mux.HandleFunc("/account/login/verifyemail", middleware.Log(r.VerifyLoginEmail))
+	r.Mux.HandleFunc("/account/login/wallet", middleware.Log(r.Web3ChallengeRequest))
+	r.Mux.HandleFunc("/account/login/fakewallet", middleware.Log(r.FakeWeb3Authorize))
+	r.Mux.HandleFunc("/account/login/verifywallet", middleware.Log(r.Web3Authorize))
 }
