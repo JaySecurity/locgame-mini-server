@@ -36,8 +36,8 @@ function locg_deploy() {
     VERSION=$2
     
     
-    SERVICE_PORT=$(get_available_port)
-    REST_PORT=$(get_available_port)
+    SERVICE_PORT=8500
+    REST_PORT=9500
     REDIS_PORT=$(get_available_port)
     NATS_PORT=$(get_available_port)
     
