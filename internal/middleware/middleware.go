@@ -29,7 +29,7 @@ func (m *Middleware) EnableCORS(next http.HandlerFunc) http.HandlerFunc {
 		// Set CORS headers
 
 		origin := r.Header.Get("Origin")
-
+		log.Debugf("Origin: %s", origin)
 		if ok := m.allowedOrigins[origin]; !ok {
 			log.Infof("Origin not allowed by CORS: %v", origin)
 			w.WriteHeader(http.StatusForbidden) // Forbidden
