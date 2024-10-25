@@ -20,7 +20,7 @@ func NewMiddleWare(cfg *config.Config) *Middleware {
 	for _, v := range cfg.AllowedOrigins {
 		m.allowedOrigins[v] = true
 	}
-
+	log.Debug(m.allowedOrigins)
 	return m
 }
 
