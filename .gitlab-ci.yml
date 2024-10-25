@@ -23,6 +23,7 @@ variables:
   PAYPAL_CLIENT_ID: $PAYPAL_CLIENT_ID
   PAYPAL_SECRET: $PAYPAL_SECRET
   OVERRIDE_CONFIG_BRANCH: $OVERRIDE_CONFIG
+  ALLOWED_ORIGINS: $ALLOWED_ORIGINS
 
 stages:
   - build
@@ -78,6 +79,7 @@ deploy-dev:
     - echo "export BLOCKCHAIN_MINTER_PRIVATE_KEY=$BLOCKCHAIN_MINTER_PRIVATE_KEY" >> env.sh
     - echo "export IMAGE_TAG=${CI_COMMIT_BRANCH}-latest" >> env.sh
     - echo "export BRANCH=${CI_COMMIT_BRANCH}" >> env.sh
+    - echo "export ALLOWED_ORIGINS=${ALLOWED_ORIGINS}" >> env.sh
     - ssh ubuntu@$SSH_ADDRESS -o StrictHostKeyChecking=no "mkdir -p ~/locg"
     - scp -o StrictHostKeyChecking=no env.sh ubuntu@$SSH_ADDRESS:~/locg/env.sh
     - scp -o StrictHostKeyChecking=no -r deploy/ ubuntu@$SSH_ADDRESS:~/locg
