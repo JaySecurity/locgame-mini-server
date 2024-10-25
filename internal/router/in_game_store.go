@@ -82,6 +82,10 @@ func (r *Router) getStoreData(w http.ResponseWriter, req *http.Request) {
 // }
 
 func (r *Router) SendPaymentReceipt(w http.ResponseWriter, req *http.Request) {
+	if req.Method != "PATCH" && req.Method != "PUT" && req.Method != "OPTIONS" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
 	sessionIdCookie, err := req.Cookie("SessionID")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -152,5 +156,5 @@ func (r *Router) HandleStoreRoutes() {
 	// Get Store Data
 	r.Mux.HandleFunc("/store", m.Logger(r.getStoreData))
 	r.Mux.HandleFunc("POST /order", m.Logger(r.CreateOrder))
-	r.Mux.HandleFunc("PATCH /order", m.Logger(r.SendPaymentReceipt))
+	r.Mux.HandleFunc("/order", m.Logger(r.SendPaymentReceipt))
 }

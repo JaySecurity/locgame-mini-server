@@ -29,7 +29,7 @@ func (m *Middleware) EnableCORS(next http.HandlerFunc) http.HandlerFunc {
 		// Set CORS headers
 
 		origin := r.Header.Get("Origin")
-		log.Debugf("Origin: %s", origin)
+
 		if ok := m.allowedOrigins[origin]; !ok {
 			log.Infof("Origin not allowed by CORS: %v", origin)
 			w.WriteHeader(http.StatusForbidden) // Forbidden
@@ -37,7 +37,7 @@ func (m *Middleware) EnableCORS(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		w.Header().Set("Access-Control-Allow-Origin", origin) // Allow all origins (you can restrict this)
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 		w.Header().Set("Content-Type", "application/json")
