@@ -5,6 +5,7 @@ import (
 	"io"
 	"locgame-mini-server/internal/middleware"
 	"locgame-mini-server/pkg/dto/accounts"
+	"locgame-mini-server/pkg/dto/errors"
 	"locgame-mini-server/pkg/log"
 	"net/http"
 )
@@ -25,6 +26,16 @@ func (r *Router) Web3ChallengeRequest(w http.ResponseWriter, req *http.Request) 
 	}
 	challengeResponse, err := r.Accounts.RequestChallenge(in)
 	if err != nil {
+		if err == errors.ErrUserNotConfirmed || err == errors.ErrUserNotFound {
+			errMsg := &ErrorMsg{
+				Message: "Email Required",
+				Code:    errors.ErrUserNotConfirmed.Error(),
+			}
+			jsonData, _ := json.Marshal(errMsg)
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(jsonData)
+			return
+		}
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -168,12 +179,14 @@ func (r *Router) VerifyLoginEmail(w http.ResponseWriter, req *http.Request) {
 
 func (r *Router) HandleAccountRoutes() {
 	// Get Store Data
+	m := middleware.NewMiddleWare(r.config)
+
 	r.Mux.HandleFunc("/account", func(w http.ResponseWriter, req *http.Request) {
 		_, _ = w.Write([]byte("Accounts"))
 	})
-	r.Mux.HandleFunc("/account/login/email", middleware.Log(r.SendLoginEmail))
-	r.Mux.HandleFunc("/account/login/verifyemail", middleware.Log(r.VerifyLoginEmail))
-	r.Mux.HandleFunc("/account/login/wallet", middleware.Log(r.Web3ChallengeRequest))
-	r.Mux.HandleFunc("/account/login/fakewallet", middleware.Log(r.FakeWeb3Authorize))
-	r.Mux.HandleFunc("/account/login/verifywallet", middleware.Log(r.Web3Authorize))
+	r.Mux.HandleFunc("/account/login/email", m.Logger(r.SendLoginEmail))
+	r.Mux.HandleFunc("/account/login/verifyemail", m.Logger(r.VerifyLoginEmail))
+	r.Mux.HandleFunc("/account/login/wallet", m.Logger(r.Web3ChallengeRequest))
+	r.Mux.HandleFunc("/account/login/fakewallet", m.Logger(r.FakeWeb3Authorize))
+	r.Mux.HandleFunc("/account/login/verifywallet", m.Logger(r.Web3Authorize))
 }

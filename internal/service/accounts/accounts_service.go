@@ -246,9 +246,13 @@ func (s *Service) RequestChallenge(
 
 	// Lookup Account by Wallet Address
 	ctx := context.Background()
-	_, err := s.store.Players.GetAccountIDByWallet(ctx, address)
+	accountId, err := s.store.Players.GetAccountIDByWallet(ctx, address)
 	if err != nil {
 		return nil, errors.ErrUserNotFound
+	}
+	user, _ := s.store.Players.GetPlayerDataByID(ctx, accountId)
+	if user.Email == "" {
+		return nil, errors.ErrUserNotConfirmed
 	}
 
 	nonce := siwe.GenerateNonce()

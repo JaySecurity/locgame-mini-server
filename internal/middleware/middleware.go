@@ -1,23 +1,36 @@
 package middleware
 
 import (
+	"locgame-mini-server/internal/config"
 	"locgame-mini-server/pkg/log"
 	"net/http"
 )
 
-// TODO: load origins from config file.
-var allowedOrigins = map[string]bool{
-	"http://localhost:5173": true,
-	"":                      true,
+type Middleware struct {
+	config         *config.Config
+	allowedOrigins map[string]bool
 }
 
-func EnableCORS(next http.HandlerFunc) http.HandlerFunc {
+func NewMiddleWare(cfg *config.Config) *Middleware {
+
+	m := new(Middleware)
+	m.config = cfg
+	m.allowedOrigins = make(map[string]bool)
+
+	for _, v := range cfg.AllowedOrigins {
+		m.allowedOrigins[v] = true
+	}
+
+	return m
+}
+
+func (m *Middleware) EnableCORS(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Set CORS headers
 
 		origin := r.Header.Get("Origin")
 
-		if ok := allowedOrigins[origin]; !ok {
+		if ok := m.allowedOrigins[origin]; !ok {
 			log.Infof("Origin not allowed by CORS: %v", origin)
 			w.WriteHeader(http.StatusForbidden) // Forbidden
 			return
@@ -39,4 +52,12 @@ func EnableCORS(next http.HandlerFunc) http.HandlerFunc {
 		// For other requests, pass to the next handler
 		next(w, r)
 	})
+}
+
+func (m *Middleware) Logger(handler http.HandlerFunc) http.HandlerFunc {
+	return m.EnableCORS(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Infof("method: %s route: %s ", r.Method, r.URL.Path)
+		// Pass control back to the handler
+		handler.ServeHTTP(w, r)
+	}))
 }

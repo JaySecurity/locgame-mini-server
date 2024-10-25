@@ -38,6 +38,10 @@ type Router struct {
 	Maintenance *maintenance.Service
 	Inventory   *inventory.Service
 }
+type ErrorMsg struct {
+	Message string `json:"message"`
+	Code    string `json:"code"`
+}
 
 // New creates a new instance of Router.
 func New(cfg *config.Config, store *store.Store) *Router {

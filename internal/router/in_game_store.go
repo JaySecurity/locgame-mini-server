@@ -9,11 +9,6 @@ import (
 	"net/http"
 )
 
-type ErrorMsg struct {
-	Message string `json:"message"`
-	Code    string `json:"code"`
-}
-
 func (r *Router) CreateOrder(w http.ResponseWriter, req *http.Request) {
 	log.Debug("Create Order")
 	sessionIdCookie, err := req.Cookie("SessionID")
@@ -153,8 +148,9 @@ func (r *Router) SendPaymentReceipt(w http.ResponseWriter, req *http.Request) {
 
 // Store data route
 func (r *Router) HandleStoreRoutes() {
+	m := middleware.NewMiddleWare(r.config)
 	// Get Store Data
-	r.Mux.HandleFunc("/store", middleware.Log(r.getStoreData))
-	r.Mux.HandleFunc("POST /order", middleware.Log(r.CreateOrder))
-	r.Mux.HandleFunc("PATCH /order", middleware.Log(r.SendPaymentReceipt))
+	r.Mux.HandleFunc("/store", m.Logger(r.getStoreData))
+	r.Mux.HandleFunc("POST /order", m.Logger(r.CreateOrder))
+	r.Mux.HandleFunc("PATCH /order", m.Logger(r.SendPaymentReceipt))
 }
