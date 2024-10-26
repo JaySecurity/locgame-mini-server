@@ -165,9 +165,9 @@ func (r *Router) VerifyLoginEmail(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	cookie := http.Cookie{Name: "SessionID", Value: session.SessionID, Path: "/", HttpOnly: true, MaxAge: int(3600)}
+	cookie := http.Cookie{Name: "SessionID", Value: session.SessionID, Path: "/", SameSite: http.SameSiteNoneMode, Secure: true, HttpOnly: true, MaxAge: int(3600)}
 	http.SetCookie(w, &cookie)
-	cookie = http.Cookie{Name: "IdToken", Value: loginResponse.RefreshToken, Path: "/", HttpOnly: true, MaxAge: int(3600)}
+	cookie = http.Cookie{Name: "IdToken", Value: loginResponse.RefreshToken, Path: "/", SameSite: http.SameSiteNoneMode, Secure: true, HttpOnly: true, MaxAge: int(3600)}
 	http.SetCookie(w, &cookie)
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
