@@ -2,6 +2,7 @@ package router
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"locgame-mini-server/internal/middleware"
 	"locgame-mini-server/pkg/dto/accounts"
@@ -119,17 +120,37 @@ func (r *Router) SendLoginEmail(w http.ResponseWriter, req *http.Request) {
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		log.Error("Error reading request body", err)
+		errMsg := &ErrorMsg{
+			Message: "Error reading request body",
+			Code:    "",
+		}
+		jsondata, _ := json.Marshal(errMsg)
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsondata)
 		return
 	}
 	err = json.Unmarshal(body, &loginRequest)
 	if err != nil {
+		log.Error("Error Parsing request body", err)
+		errMsg := &ErrorMsg{
+			Message: "Error parsing request body",
+			Code:    "",
+		}
+		jsondata, _ := json.Marshal(errMsg)
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsondata)
 		return
 	}
 	loginResponse, err := r.Accounts.SendLoginEmail(&loginRequest)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		log.Error("Internal Server Error", err)
+		errMsg := &ErrorMsg{
+			Message: fmt.Sprintf("Internal Server Error: %v", err),
+			Code:    "",
+		}
+		jsondata, _ := json.Marshal(errMsg)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsondata)
 		return
 	}
 	jsonData, err := json.Marshal(loginResponse)
@@ -147,17 +168,37 @@ func (r *Router) VerifyLoginEmail(w http.ResponseWriter, req *http.Request) {
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		log.Error("Error reading request body", err)
+		errMsg := &ErrorMsg{
+			Message: "Error reading request body",
+			Code:    "",
+		}
+		jsondata, _ := json.Marshal(errMsg)
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsondata)
 		return
 	}
 	err = json.Unmarshal(body, verifyRequest)
 	if err != nil {
+		log.Error("Error Parsing request body", err)
+		errMsg := &ErrorMsg{
+			Message: "Error parsing request body",
+			Code:    "",
+		}
+		jsondata, _ := json.Marshal(errMsg)
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsondata)
 		return
 	}
 	loginResponse, session, err := r.Accounts.VerifyLoginEmail(verifyRequest)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		log.Error("Internal Server Error", err)
+		errMsg := &ErrorMsg{
+			Message: fmt.Sprintf("Internal Server Error: %v", err),
+			Code:    "",
+		}
+		jsondata, _ := json.Marshal(errMsg)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsondata)
 		return
 	}
 	jsonData, err := json.Marshal(loginResponse)

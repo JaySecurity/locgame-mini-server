@@ -20,6 +20,8 @@ func NewMiddleWare(cfg *config.Config) *Middleware {
 	for _, v := range cfg.AllowedOrigins {
 		m.allowedOrigins[v] = true
 	}
+	m.allowedOrigins["http://192.168.2.42:5173"] = true
+	m.allowedOrigins["http://192.168.2.42:5173/"] = true
 	log.Debug(m.allowedOrigins)
 	return m
 }
@@ -29,6 +31,7 @@ func (m *Middleware) EnableCORS(next http.HandlerFunc) http.HandlerFunc {
 		// Set CORS headers
 
 		origin := r.Header.Get("Origin")
+		log.Debugf("|%s|", origin)
 
 		if ok := m.allowedOrigins[origin]; !ok {
 			log.Infof("Origin not allowed by CORS: %v", origin)
