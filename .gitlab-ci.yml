@@ -41,7 +41,7 @@ docker-build:
       entrypoint: ['dockerd-entrypoint.sh', '--tls=false']
 
   before_script:
-    - amazon-linux-extras list
+    - yum install -y amazon-linux-extras
     - amazon-linux-extras install -y docker
     - aws --version
     - docker --version
