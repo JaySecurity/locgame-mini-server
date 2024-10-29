@@ -40,7 +40,7 @@ docker-build:
       entrypoint: ['dockerd-entrypoint.sh', '--tls=false']
 
   before_script:
-    - amazon-linux-extras install docker
+    # - amazon-linux-extras install docker
     - aws --version
     - docker --version
     - echo $CI_COMMIT_BRANCH
