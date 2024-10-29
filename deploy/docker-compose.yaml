@@ -71,6 +71,7 @@ services:
       PAYPAL_SECRET: ${PAYPAL_SECRET}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
       OVERRIDE_CONFIG_BRANCH: ${OVERRIDE_CONFIG_BRANCH}
+      ETHERSCAN_API_KEY: ${ETHERSCAN_API_KEY}
     links:
       - 'nats:nats'
       - 'redis:redis'
