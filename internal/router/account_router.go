@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"locgame-mini-server/internal/middleware"
 	"locgame-mini-server/pkg/dto/accounts"
 	"locgame-mini-server/pkg/dto/errors"
 	"locgame-mini-server/pkg/log"
@@ -220,7 +219,7 @@ func (r *Router) VerifyLoginEmail(w http.ResponseWriter, req *http.Request) {
 
 func (r *Router) HandleAccountRoutes() {
 	// Get Store Data
-	m := middleware.NewMiddleWare(r.config)
+	m := r.middleware
 
 	r.Mux.HandleFunc("/account", func(w http.ResponseWriter, req *http.Request) {
 		_, _ = w.Write([]byte("Accounts"))

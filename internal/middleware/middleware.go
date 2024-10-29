@@ -20,9 +20,10 @@ func NewMiddleWare(cfg *config.Config) *Middleware {
 	for _, v := range cfg.AllowedOrigins {
 		m.allowedOrigins[v] = true
 	}
-	m.allowedOrigins["http://192.168.2.42:5173"] = true
-	m.allowedOrigins["http://192.168.2.42:5173/"] = true
-	log.Debug(m.allowedOrigins)
+	for k, v := range m.allowedOrigins {
+		log.Debugf("Key: %v  -  %v", k, v)
+
+	}
 	return m
 }
 

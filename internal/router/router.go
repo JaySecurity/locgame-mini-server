@@ -8,6 +8,7 @@ import (
 
 	"locgame-mini-server/internal/blockchain"
 	"locgame-mini-server/internal/config"
+	"locgame-mini-server/internal/middleware"
 	"locgame-mini-server/internal/service/accounts"
 	inGameStore "locgame-mini-server/internal/service/in_game_store"
 	"locgame-mini-server/internal/service/inventory"
@@ -24,9 +25,10 @@ import (
 // Consolidates domain services.
 // Stores connection with storages and configurations to provide them to domain services.
 type Router struct {
-	store  *store.Store
-	config *config.Config
-	Mux    *http.ServeMux
+	store      *store.Store
+	config     *config.Config
+	middleware *middleware.Middleware
+	Mux        *http.ServeMux
 
 	blockchain *blockchain.Blockchain
 
@@ -44,11 +46,12 @@ type ErrorMsg struct {
 }
 
 // New creates a new instance of Router.
-func New(cfg *config.Config, store *store.Store) *Router {
+func New(cfg *config.Config, middleware *middleware.Middleware, store *store.Store) *Router {
 	s := new(Router)
 	s.config = cfg
 	s.store = store
 	s.Mux = http.NewServeMux()
+	s.middleware = middleware
 
 	rand.Seed(time.Now().UTC().Unix())
 

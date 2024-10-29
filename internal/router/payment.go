@@ -1,15 +1,21 @@
 package router
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
-	"locgame-mini-server/internal/middleware"
+	"locgame-mini-server/internal/blockchain/contracts"
+	"locgame-mini-server/pkg/dto/store"
 	"locgame-mini-server/pkg/log"
 	"math/big"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Result struct {
@@ -31,8 +37,14 @@ type GasResponse struct {
 	MaxFeePerGas         string `json:"maxFeePerGas"`
 }
 
+type SubmitHashRequest struct {
+	TransactionHash string `json:"txHash"`
+	BuyerID         string `json:"buyer_id"`
+	OrderID         string `json:"order_id"`
+}
+
 func (r *Router) HandlePaymentRoutes() {
-	m := middleware.NewMiddleWare(r.config)
+	m := r.middleware
 	r.Mux.HandleFunc("/payment", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET")
@@ -42,6 +54,7 @@ func (r *Router) HandlePaymentRoutes() {
 	})
 
 	r.Mux.HandleFunc("GET /payment/gas", m.Logger(r.GetGas))
+	r.Mux.HandleFunc("/payment/submit", m.Logger(r.SubmitTx))
 }
 
 func (r *Router) GetGas(w http.ResponseWriter, req *http.Request) {
@@ -90,19 +103,131 @@ func (r *Router) GetGas(w http.ResponseWriter, req *http.Request) {
 	}
 
 	jsonData, err := json.Marshal(gas)
-
+	if err != nil {
+		log.Error("Error reading gas response body", err)
+		errMsg := &ErrorMsg{
+			Message: "Error reading gas response body",
+			Code:    "",
+		}
+		jsondata, _ := json.Marshal(errMsg)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsondata)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
 
 }
 
-// func GweiToWei(gwei string) (*big.Float, error) {
-// 	gweiFloat, ok := new(big.Float).SetString(gwei)
-// 	if !ok {
-// 		return nil, fmt.Errorf("Unable to convert to Wei")
-// 	}
-// 	return new(big.Float).Mul(gweiFloat, big.NewFloat(params.GWei)), nil
-// }
+func (r *Router) SubmitTx(w http.ResponseWriter, req *http.Request) {
+	ctx := context.Background()
+	addressMap := map[store.PaymentMethod]string{
+		store.PaymentMethod_ETH:      r.config.Blockchain.PaymentRecipients.LOCG,
+		store.PaymentMethod_ETHBase:  r.config.Blockchain.PaymentRecipients.LOCG,
+		store.PaymentMethod_LOCGBase: r.config.Blockchain.Contracts.BaseLOCG,
+		store.PaymentMethod_USDCBase: r.config.Blockchain.Contracts.BaseUSDC,
+		store.PaymentMethod_LOCG:     r.config.Blockchain.Contracts.LOCG,
+		store.PaymentMethod_USDT:     r.config.Blockchain.Contracts.USDT,
+	}
+	in := &SubmitHashRequest{}
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		log.Error("Error reading request body", err)
+		errMsg := &ErrorMsg{
+			Message: "Error reading request body",
+			Code:    "",
+		}
+		jsondata, _ := json.Marshal(errMsg)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsondata)
+		return
+	}
+	err = json.Unmarshal(body, in)
+	if err != nil {
+		log.Error("Error parsing request body", err)
+		w.WriteHeader(http.StatusServiceUnavailable)
+		return
+	}
+	order, err := r.store.Orders.Get(ctx, in.OrderID)
+	if err != nil {
+		log.Error("Error Fetching Order", err)
+		errMsg := &ErrorMsg{
+			Message: "Error fetching order",
+			Code:    mongo.ErrNoDocuments.Error(),
+		}
+		jsondata, _ := json.Marshal(errMsg)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsondata)
+		return
+	}
+	if order.Status != store.OrderStatus_WaitingForPayment {
+		log.Error("Invalid Order Status")
+		errMsg := &ErrorMsg{
+			Message: "Invalid order status",
+			Code:    order.Status.String(),
+		}
+		jsondata, _ := json.Marshal(errMsg)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsondata)
+		return
+	}
+	if order.BuyerID.Value != in.BuyerID {
+		log.Error("Buyer Id Mismatch")
+		errMsg := &ErrorMsg{
+			Message: "Buyer Id Mismatch",
+			Code:    "",
+		}
+		jsondata, _ := json.Marshal(errMsg)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsondata)
+		return
+	}
+	if order.PaymentHash != "" {
+		log.Error("Transaction Hash Already Submitted")
+		errMsg := &ErrorMsg{
+			Message: "Transaction Hash Already Submitted",
+			Code:    order.PaymentHash,
+		}
+		jsondata, _ := json.Marshal(errMsg)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsondata)
+		return
+	}
+	order.PaymentHash = in.TransactionHash
+	err = r.store.Orders.Update(ctx, order)
+	if err != nil {
+		log.Error("Error Updating Order")
+		errMsg := &ErrorMsg{
+			Message: "Error Updating Order",
+			Code:    err.Error(),
+		}
+		jsondata, _ := json.Marshal(errMsg)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsondata)
+		return
+	}
+
+	value, ok := new(big.Int).SetString(order.Price, 10)
+	if !ok {
+		log.Error("Error setting value")
+		errMsg := &ErrorMsg{
+			Message: "Error setting value",
+			Code:    "",
+		}
+		jsondata, _ := json.Marshal(errMsg)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsondata)
+		return
+	}
+	transfer := &contracts.ERC20Transfer{
+		From:  common.HexToAddress(order.BuyerID.Value),
+		To:    common.HexToAddress(addressMap[order.PaymentMethod]),
+		Value: value,
+		Raw:   types.Log{TxHash: common.HexToHash(order.PaymentHash)},
+	}
+	go r.Payments.OnTransferReceived(order.PaymentMethod, transfer)
+	w.WriteHeader(http.StatusNoContent)
+}
 
 func GweiToWei(gweiStr string) (*big.Int, error) {
 	gweiStr = strings.TrimSpace(gweiStr)
@@ -120,3 +245,76 @@ func GweiToWei(gweiStr string) (*big.Int, error) {
 func BigIntToHex(b *big.Int) string {
 	return "0x" + b.Text(16)
 }
+
+// func CheckTransaction(tokenName string, rpcAddress string, recipient common.Address, isReconnect bool, onTransferReceived func(tx *contracts.ERC20Transfer)) {
+// 	client, err := ethclient.Dial(`wss://` + rpcAddress)
+// 	if err != nil {
+// 		if !isReconnect {
+// 			log.Warning("first")
+// 			log.Warning(err)
+// 		}
+// 		return
+// 	}
+// 	defer client.Close()
+
+// 	headers := make(chan *types.Header)
+// 	sub, err := client.SubscribeNewHead(context.Background(), headers)
+// 	if err != nil {
+// 		if !isReconnect {
+// 			log.Warning("second")
+// 			log.Warning(err)
+// 		}
+// 		return
+// 	}
+// 	defer sub.Unsubscribe()
+
+// 	if isReconnect {
+// 		log.Warning("The monitoring of native token transactions (" + tokenName + ") in the blockchain has been restored...")
+// 	} else {
+// 		log.Info("The monitoring of native token transactions (" + tokenName + ") in the blockchain has been started...")
+// 	}
+
+// 	for {
+// 		select {
+
+// 		case err := <-sub.Err():
+// 			if err != nil {
+// 				if !isReconnect {
+// 					log.Warning("third")
+// 					log.Warning(err)
+// 				}
+// 				return
+// 			}
+// 		case header := <-headers:
+// 			block, err := client.BlockByHash(context.Background(), header.Hash())
+// 			if err != nil {
+// 				log.Errorf("%s - Block By Hash Error: %v\n", tokenName, err)
+// 				log.Debugf("Block number: %v\nBlock Hash: %v", header.Number.String(), header.Hash().Hex())
+// 				continue
+// 			}
+// 			for _, tx := range block.Transactions() {
+// 				// Get the signer for the transaction
+// 				signer := types.LatestSignerForChainID(tx.ChainId())
+// 				// Derive the sender's address
+// 				sender, err := types.Sender(signer, tx)
+// 				if err != nil {
+// 					log.Fatalf("Failed to get sender from transaction: %v", err)
+// 				}
+// 				if tx.To() != nil && *tx.To() == recipient {
+// 					log.Debugf("Native token transaction detected:\nTx hash: %s\n", tx.Hash().Hex())
+
+// 					if tx.Value().Cmp(big.NewInt(0)) > 0 {
+// 						transfer := &contracts.ERC20Transfer{
+// 							From:  sender,
+// 							To:    *tx.To(),
+// 							Value: tx.Value(),
+// 							Raw:   types.Log{TxHash: tx.Hash()},
+// 						}
+// 						go onTransferReceived(transfer)
+// 					}
+
+// 				}
+// 			}
+// 		}
+// 	}
+// }

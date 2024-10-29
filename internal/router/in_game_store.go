@@ -3,7 +3,6 @@ package router
 import (
 	"encoding/json"
 	"io"
-	"locgame-mini-server/internal/middleware"
 	storeDto "locgame-mini-server/pkg/dto/store"
 	"locgame-mini-server/pkg/log"
 	"net/http"
@@ -152,7 +151,7 @@ func (r *Router) SendPaymentReceipt(w http.ResponseWriter, req *http.Request) {
 
 // Store data route
 func (r *Router) HandleStoreRoutes() {
-	m := middleware.NewMiddleWare(r.config)
+	m := r.middleware
 	r.Mux.HandleFunc("/store", m.Logger(r.getStoreData))
 	r.Mux.HandleFunc("POST /order", m.Logger(r.CreateOrder))
 	r.Mux.HandleFunc("/order", m.Logger(r.SendPaymentReceipt))
