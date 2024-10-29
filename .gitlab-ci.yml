@@ -33,7 +33,7 @@ stages:
 docker-build:
   stage: build
   image:
-    name: amazon/aws-cli:2.18.12
+    name: amazon/aws-cli:latest
     entrypoint: ['']
   services:
     - name: docker:25-dind
@@ -41,7 +41,6 @@ docker-build:
       entrypoint: ['dockerd-entrypoint.sh', '--tls=false']
 
   before_script:
-    - pacman -V
     - amazon-linux-extras install docker
     - aws --version
     - docker --version
