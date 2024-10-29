@@ -41,6 +41,7 @@ type SubmitHashRequest struct {
 	TransactionHash string `json:"txHash"`
 	BuyerID         string `json:"buyer_id"`
 	OrderID         string `json:"order_id"`
+	Wallet          string `json:"wallet"`
 }
 
 func (r *Router) HandlePaymentRoutes() {
@@ -220,7 +221,7 @@ func (r *Router) SubmitTx(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	transfer := &contracts.ERC20Transfer{
-		From:  common.HexToAddress(order.BuyerID.Value),
+		From:  common.HexToAddress(in.Wallet),
 		To:    common.HexToAddress(addressMap[order.PaymentMethod]),
 		Value: value,
 		Raw:   types.Log{TxHash: common.HexToHash(order.PaymentHash)},
