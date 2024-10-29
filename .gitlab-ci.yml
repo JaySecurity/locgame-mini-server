@@ -33,7 +33,7 @@ stages:
 docker-build:
   stage: build
   image:
-    name: amazon/aws-cli:2.18.15
+    name: amazon/aws-cli:2.18.12
     entrypoint: ['']
   services:
     - name: docker:25-dind
@@ -41,8 +41,8 @@ docker-build:
       entrypoint: ['dockerd-entrypoint.sh', '--tls=false']
 
   before_script:
-    - amazon-linux-extras install docker
     - pacman -V
+    - amazon-linux-extras install docker
     - aws --version
     - docker --version
     - echo $CI_COMMIT_BRANCH
