@@ -4,13 +4,14 @@ import (
 	"context"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 	"locgame-mini-server/internal/config"
 	"locgame-mini-server/pkg/dto/base"
 	"locgame-mini-server/pkg/dto/store"
 	"locgame-mini-server/pkg/log"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // OrdersStore stores data for the storage of data about orders.

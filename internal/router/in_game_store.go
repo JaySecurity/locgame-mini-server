@@ -8,12 +8,8 @@ import (
 	"net/http"
 )
 
-type ErrorMsg struct {
-	Message string `json:"message"`
-	Code    string `json:"code"`
-}
-
 func (r *Router) CreateOrder(w http.ResponseWriter, req *http.Request) {
+	log.Debug("Create Order")
 	sessionIdCookie, err := req.Cookie("SessionID")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -56,6 +52,27 @@ func (r *Router) CreateOrder(w http.ResponseWriter, req *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
+	// w.WriteHeader(http.StatusCreated)
+	// _, _ = w.Write([]byte("Yay"))
+}
+
+func (r *Router) getStoreData(w http.ResponseWriter, req *http.Request) {
+
+	data, err := r.InGameStore.GetData(req.Context())
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	jsonData, err := json.Marshal(data)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_, _ = w.Write(jsonData)
 }
 
 // func (r *Router) CreateUpgradeOrder(client *network.Client, in *storeDto.UpgradeRequest) (*storeDto.OrderResponse, error) {
@@ -63,6 +80,10 @@ func (r *Router) CreateOrder(w http.ResponseWriter, req *http.Request) {
 // }
 
 func (r *Router) SendPaymentReceipt(w http.ResponseWriter, req *http.Request) {
+	if req.Method != "PATCH" && req.Method != "PUT" && req.Method != "OPTIONS" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
 	sessionIdCookie, err := req.Cookie("SessionID")
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -129,27 +150,8 @@ func (r *Router) SendPaymentReceipt(w http.ResponseWriter, req *http.Request) {
 
 // Store data route
 func (r *Router) HandleStoreRoutes() {
-	// Get Store Data
-	r.Mux.HandleFunc("/store", func(w http.ResponseWriter, req *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-
-		data, err := r.InGameStore.GetData(req.Context())
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		log.Debug("Store data:", data.Tokens[0].Available)
-		jsonData, err := json.Marshal(data)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write(jsonData)
-	})
-
-	r.Mux.HandleFunc("POST /order", r.CreateOrder)
-	r.Mux.HandleFunc("PATCH /order", r.SendPaymentReceipt)
+	m := r.middleware
+	r.Mux.HandleFunc("/store", m.Logger(r.getStoreData))
+	r.Mux.HandleFunc("POST /order", m.Logger(r.CreateOrder))
+	r.Mux.HandleFunc("/order", m.Logger(r.SendPaymentReceipt))
 }

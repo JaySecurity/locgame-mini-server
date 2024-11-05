@@ -55,6 +55,8 @@ type Config struct {
 
 	OnReload         func()
 	OnReloadComplete []func()
+
+	AllowedOrigins []string `split_words:"true"`
 }
 
 // Init initializes configurations.
@@ -74,7 +76,6 @@ func Init(path string) *Config {
 	if branch == "" {
 		branch = string(c.Environment)
 	}
-
 	c.Repository = New(path, branch)
 	c.GameConfigs = new(GameConfigs)
 	c.Paypal = NewPaypalConfig()

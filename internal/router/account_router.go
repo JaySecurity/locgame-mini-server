@@ -2,17 +2,15 @@ package router
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"locgame-mini-server/pkg/dto/accounts"
+	"locgame-mini-server/pkg/dto/errors"
 	"locgame-mini-server/pkg/log"
 	"net/http"
 )
 
 func (r *Router) Web3ChallengeRequest(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-	w.Header().Set("Content-Type", "application/json")
 
 	in := &accounts.Web3AuthRequest{}
 	body, err := io.ReadAll(req.Body)
@@ -28,6 +26,16 @@ func (r *Router) Web3ChallengeRequest(w http.ResponseWriter, req *http.Request) 
 	}
 	challengeResponse, err := r.Accounts.RequestChallenge(in)
 	if err != nil {
+		if err == errors.ErrUserNotConfirmed || err == errors.ErrUserNotFound {
+			errMsg := &ErrorMsg{
+				Message: "Email Required",
+				Code:    errors.ErrUserNotConfirmed.Error(),
+			}
+			jsonData, _ := json.Marshal(errMsg)
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(jsonData)
+			return
+		}
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -41,10 +49,6 @@ func (r *Router) Web3ChallengeRequest(w http.ResponseWriter, req *http.Request) 
 }
 
 func (r *Router) FakeWeb3Authorize(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "POST")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-	w.Header().Set("Content-Type", "application/json")
 
 	in := &accounts.Web3AuthRequest{}
 	body, err := io.ReadAll(req.Body)
@@ -78,10 +82,6 @@ func (r *Router) FakeWeb3Authorize(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *Router) Web3Authorize(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "POST")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-	w.Header().Set("Content-Type", "application/json")
 
 	in := &accounts.Web3Signature{}
 	body, err := io.ReadAll(req.Body)
@@ -105,47 +105,51 @@ func (r *Router) Web3Authorize(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	cookie := http.Cookie{Name: "SessionID", Value: session.SessionID, Path: "/", HttpOnly: true, MaxAge: int(3600)}
+	cookie := http.Cookie{Name: "SessionID", Value: session.SessionID, Path: "/", SameSite: http.SameSiteNoneMode, Secure: true, HttpOnly: true, MaxAge: int(3600)}
 	http.SetCookie(w, &cookie)
-	cookie = http.Cookie{Name: "IdToken", Value: authResponse.RefreshToken, Path: "/", HttpOnly: true, MaxAge: int(3600)}
+	cookie = http.Cookie{Name: "IdToken", Value: authResponse.RefreshToken, Path: "/", SameSite: http.SameSiteNoneMode, Secure: true, HttpOnly: true, MaxAge: int(3600)}
 	http.SetCookie(w, &cookie)
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
 }
 
-// func (r *Router) Logout( _ *base.Empty) (*base.Empty, error) {
-// 	return nil, r.Accounts.Logout(client.Context())
-// }
-
-// func (r *Router) AuthToken( in *accounts.RefreshTokenRequest) (*accounts.LoginResponse, error) {
-// 	return r.Accounts.AuthToken(client.Context(), in)
-// }
-
-// func (r *Router) SetAccountInfo( in *accounts.SetInfoRequest) (*base.Empty, error) {
-// 	err := r.Accounts.SetInfo(client.Context(), in)
-// 	return &base.Empty{}, err
-// }
-
 func (r *Router) SendLoginEmail(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "POST")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-	w.Header().Set("Content-Type", "application/json")
+
 	var loginRequest accounts.LoginEmailRequest
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		log.Error("Error reading request body", err)
+		errMsg := &ErrorMsg{
+			Message: "Error reading request body",
+			Code:    "",
+		}
+		jsondata, _ := json.Marshal(errMsg)
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsondata)
 		return
 	}
 	err = json.Unmarshal(body, &loginRequest)
 	if err != nil {
+		log.Error("Error Parsing request body", err)
+		errMsg := &ErrorMsg{
+			Message: "Error parsing request body",
+			Code:    "",
+		}
+		jsondata, _ := json.Marshal(errMsg)
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsondata)
 		return
 	}
 	loginResponse, err := r.Accounts.SendLoginEmail(&loginRequest)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		log.Error("Internal Server Error", err)
+		errMsg := &ErrorMsg{
+			Message: fmt.Sprintf("Internal Server Error: %v", err),
+			Code:    "",
+		}
+		jsondata, _ := json.Marshal(errMsg)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsondata)
 		return
 	}
 	jsonData, err := json.Marshal(loginResponse)
@@ -158,26 +162,42 @@ func (r *Router) SendLoginEmail(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *Router) VerifyLoginEmail(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "POST")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-	w.Header().Set("Content-Type", "application/json")
-	verifyRequest := &accounts.VerifyLoginEmailRequest{}
 
+	verifyRequest := &accounts.VerifyLoginEmailRequest{}
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		log.Error("Error reading request body", err)
+		errMsg := &ErrorMsg{
+			Message: "Error reading request body",
+			Code:    "",
+		}
+		jsondata, _ := json.Marshal(errMsg)
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsondata)
 		return
 	}
 	err = json.Unmarshal(body, verifyRequest)
 	if err != nil {
+		log.Error("Error Parsing request body", err)
+		errMsg := &ErrorMsg{
+			Message: "Error parsing request body",
+			Code:    "",
+		}
+		jsondata, _ := json.Marshal(errMsg)
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(jsondata)
 		return
 	}
 	loginResponse, session, err := r.Accounts.VerifyLoginEmail(verifyRequest)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		log.Error("Internal Server Error", err)
+		errMsg := &ErrorMsg{
+			Message: fmt.Sprintf("Internal Server Error: %v", err),
+			Code:    "",
+		}
+		jsondata, _ := json.Marshal(errMsg)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(jsondata)
 		return
 	}
 	jsonData, err := json.Marshal(loginResponse)
@@ -185,18 +205,13 @@ func (r *Router) VerifyLoginEmail(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	cookie := http.Cookie{Name: "SessionID", Value: session.SessionID, Path: "/", HttpOnly: true, MaxAge: int(3600)}
+	cookie := http.Cookie{Name: "SessionID", Value: session.SessionID, Path: "/", SameSite: http.SameSiteNoneMode, Secure: true, HttpOnly: true, MaxAge: int(3600)}
 	http.SetCookie(w, &cookie)
-	cookie = http.Cookie{Name: "IdToken", Value: loginResponse.RefreshToken, Path: "/", HttpOnly: true, MaxAge: int(3600)}
+	cookie = http.Cookie{Name: "IdToken", Value: loginResponse.RefreshToken, Path: "/", SameSite: http.SameSiteNoneMode, Secure: true, HttpOnly: true, MaxAge: int(3600)}
 	http.SetCookie(w, &cookie)
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonData)
 }
-
-// func (r *Router) SetActiveWallet( in *accounts.SetActiveWalletRequest) (*base.Empty, error) {
-// 	err := r.Accounts.SetActiveWallet(client.Context(), in)
-// 	return &base.Empty{}, err
-// }
 
 // func (r *Router) GetUserBalances(_ *network.Client, in *accounts.AccountBalanceRequest) (*accounts.AccountBalanceResponse, error) {
 // 	return r.Accounts.GetUserBalances(in.Wallet)
@@ -204,17 +219,14 @@ func (r *Router) VerifyLoginEmail(w http.ResponseWriter, req *http.Request) {
 
 func (r *Router) HandleAccountRoutes() {
 	// Get Store Data
-	r.Mux.HandleFunc("/account", func(w http.ResponseWriter, req *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+	m := r.middleware
 
-		w.Header().Set("Content-Type", "application/json")
+	r.Mux.HandleFunc("/account", func(w http.ResponseWriter, req *http.Request) {
 		_, _ = w.Write([]byte("Accounts"))
 	})
-	r.Mux.HandleFunc("/account/login/email", r.SendLoginEmail)
-	r.Mux.HandleFunc("/account/login/verifyemail", r.VerifyLoginEmail)
-	r.Mux.HandleFunc("/account/login/wallet", r.Web3ChallengeRequest)
-	r.Mux.HandleFunc("/account/login/fakewallet", r.FakeWeb3Authorize)
-	r.Mux.HandleFunc("/account/login/verifywallet", r.Web3Authorize)
+	r.Mux.HandleFunc("/account/login/email", m.Logger(r.SendLoginEmail))
+	r.Mux.HandleFunc("/account/login/verifyemail", m.Logger(r.VerifyLoginEmail))
+	r.Mux.HandleFunc("/account/login/wallet", m.Logger(r.Web3ChallengeRequest))
+	r.Mux.HandleFunc("/account/login/fakewallet", m.Logger(r.FakeWeb3Authorize))
+	r.Mux.HandleFunc("/account/login/verifywallet", m.Logger(r.Web3Authorize))
 }

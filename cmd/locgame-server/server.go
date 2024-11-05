@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"locgame-mini-server/internal/blockchain"
 	"locgame-mini-server/internal/config"
+	"locgame-mini-server/internal/middleware"
 	"locgame-mini-server/internal/router"
 	"locgame-mini-server/internal/service/accounts"
 	inGameStore "locgame-mini-server/internal/service/in_game_store"
@@ -48,8 +49,8 @@ func main() {
 	network.Verbose = cfg.NetworkVerboseMode
 
 	dataStore := store.NewStore(cfg)
-
-	r := router.New(cfg, dataStore)
+	m := middleware.NewMiddleWare(cfg)
+	r := router.New(cfg, m, dataStore)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)

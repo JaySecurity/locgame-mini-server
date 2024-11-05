@@ -19,7 +19,6 @@ import (
 
 	storeDto "locgame-mini-server/pkg/dto/store"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/shopspring/decimal"
 )
@@ -162,37 +161,37 @@ func (s *Service) GetEthRate() (*storeDto.EthConvertRate, error) {
 	return s.ethConvertRate, nil
 }
 
-func (s *Service) watchTransfer(tokenName string, method storeDto.PaymentMethod, ERC20Contract common.Address, paymentRecipient common.Address, rpcAddress string) {
-	isReconnect := false
-	for {
-		s.blockchain.WatchERC20Transactions(tokenName, rpcAddress, ERC20Contract, paymentRecipient, isReconnect, func(transfer *contracts.ERC20Transfer) {
-			s.onTransferReceived(method, transfer)
-		})
-		time.Sleep(1 * time.Second)
-		isReconnect = true
-	}
-}
+// func (s *Service) watchTransfer(tokenName string, method storeDto.PaymentMethod, ERC20Contract common.Address, paymentRecipient common.Address, rpcAddress string) {
+// 	isReconnect := false
+// 	for {
+// 		s.blockchain.WatchERC20Transactions(tokenName, rpcAddress, ERC20Contract, paymentRecipient, isReconnect, func(transfer *contracts.ERC20Transfer) {
+// 			s.onTransferReceived(method, transfer)
+// 		})
+// 		time.Sleep(1 * time.Second)
+// 		isReconnect = true
+// 	}
+// }
 
-func (s *Service) watchNativeTransfer(tokenName string, method storeDto.PaymentMethod, paymentRecipient common.Address, rpcAddress string) {
-	isReconnect := false
-	for {
-		if method == storeDto.PaymentMethod_ETH {
-			s.blockchain.WatchNativeEthereumTransactions(tokenName, rpcAddress, paymentRecipient, isReconnect, func(transfer *contracts.ERC20Transfer) {
-				s.onTransferReceived(method, transfer)
-			})
-			time.Sleep(1 * time.Second)
-			isReconnect = true
-		} else if method == storeDto.PaymentMethod_ETHBase {
-			s.blockchain.WatchNativeBaseTransactions(tokenName, rpcAddress, paymentRecipient, isReconnect, func(transfer *contracts.ERC20Transfer) {
-				s.onTransferReceived(method, transfer)
-			})
-			time.Sleep(1 * time.Second)
-			isReconnect = true
-		}
-	}
-}
+// func (s *Service) watchNativeTransfer(tokenName string, method storeDto.PaymentMethod, paymentRecipient common.Address, rpcAddress string) {
+// 	isReconnect := false
+// 	for {
+// 		if method == storeDto.PaymentMethod_ETH {
+// 			s.blockchain.WatchNativeEthereumTransactions(tokenName, rpcAddress, paymentRecipient, isReconnect, func(transfer *contracts.ERC20Transfer) {
+// 				s.onTransferReceived(method, transfer)
+// 			})
+// 			time.Sleep(1 * time.Second)
+// 			isReconnect = true
+// 		} else if method == storeDto.PaymentMethod_ETHBase {
+// 			s.blockchain.WatchNativeBaseTransactions(tokenName, rpcAddress, paymentRecipient, isReconnect, func(transfer *contracts.ERC20Transfer) {
+// 				s.onTransferReceived(method, transfer)
+// 			})
+// 			time.Sleep(1 * time.Second)
+// 			isReconnect = true
+// 		}
+// 	}
+// }
 
-func (s *Service) onTransferReceived(method storeDto.PaymentMethod, transfer *contracts.ERC20Transfer) {
+func (s *Service) OnTransferReceived(method storeDto.PaymentMethod, transfer *contracts.ERC20Transfer) {
 	defer func() {
 		if err := recover(); err != nil {
 			const size = 64 << 10

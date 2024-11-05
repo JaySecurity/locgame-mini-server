@@ -47,8 +47,8 @@ function locg_deploy() {
     # shellcheck disable=SC2143
     if [[ $(docker ps -a | grep locg_"${BUILD_ENVIRONMENT}"_service_1) ]]; then
         echo "BUILD_Environment already exists. Deploying with saving the last ports."
-        SERVICE_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"8080/tcp\") 0) \"HostPort\"}}" locg_"${BUILD_ENVIRONMENT}"_service_1)
-        REST_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"8080/tcp\") 0) \"HostPort\"}}" locg_"${BUILD_ENVIRONMENT}"_rest-api_1)
+        # SERVICE_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"8080/tcp\") 0) \"HostPort\"}}" locg_"${BUILD_ENVIRONMENT}"_service_1)
+        # REST_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"8080/tcp\") 0) \"HostPort\"}}" locg_"${BUILD_ENVIRONMENT}"_rest-api_1)
         REDIS_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"6379/tcp\") 0) \"HostPort\"}}" locg_"${BUILD_ENVIRONMENT}"_redis_1)
         NATS_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"4222/tcp\") 0) \"HostPort\"}}" locg_"${BUILD_ENVIRONMENT}"_nats_1)
         
@@ -60,7 +60,7 @@ function locg_deploy() {
         fi
         
         if [[ "$REST_PORT" =~ ^[0-9]+$ ]]; then
-            echo "MongoDB port: OK"
+            echo "REST API port: OK"
         else
             echo "Unable get Rest API port: $REST_PORT"
             REST_PORT=$(get_available_port)
