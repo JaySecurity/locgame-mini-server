@@ -53,9 +53,9 @@ func (c *SesConfig) SetEnvironment(environment Environment) {
 	envName := caser.String(string(environment))
 	if env, ok := c.environments[envName]; ok {
 		c.SesEnv = env
-		log.Debug("Selected blockchain environment:", envName)
+		log.Debug("Selected SES environment:", envName)
 	} else {
-		log.Warning("Invalid blockchain environment:", envName, "Development environment will be used.")
+		log.Warning("Invalid SES environment:", envName, "Development environment will be used.")
 		c.SesEnv = c.environments["Development"]
 	}
 }

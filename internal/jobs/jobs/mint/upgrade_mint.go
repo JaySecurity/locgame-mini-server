@@ -18,6 +18,7 @@ import (
 
 func (w *Worker) onMintUpgradeOrderRequestReceived(request *storeDto.MintJobRequest) {
 	ctx := context.Background()
+	time.Sleep(5 * time.Second)
 	order, err := w.GetStore().Orders.Get(ctx, request.ID.Value)
 	if err != nil {
 		log.Error("Failed to get order:", request.ID, "Error:", err)

@@ -43,13 +43,13 @@ func (m *Middleware) EnableCORS(next http.HandlerFunc) http.HandlerFunc {
 		w.Header().Set("Access-Control-Allow-Origin", origin) // Allow all origins (you can restrict this)
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Accept-Language")
 		w.Header().Set("Content-Type", "application/json")
 
 		// If it's a preflight OPTIONS request, respond with OK status
 		if r.Method == http.MethodOptions {
 			log.Debug("MethodOptions", r.URL.Path)
-			w.WriteHeader(http.StatusOK)
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
 

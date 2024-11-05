@@ -65,7 +65,6 @@ func (r *Router) getStoreData(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	log.Debug("Store data:", data.Tokens[0].Available)
 	jsonData, err := json.Marshal(data)
 
 	if err != nil {
