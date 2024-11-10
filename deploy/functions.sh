@@ -20,7 +20,7 @@ function locg_delete_environment() {
     REDIS_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"6379/tcp\") 0) \"HostPort\"}}" locg_"${ENVIRONMENT}"_redis_1)
     NATS_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"4222/tcp\") 0) \"HostPort\"}}" locg_"${ENVIRONMENT}"_nats_1)
     
-    docker-compose -f ~/locg/deploy/docker-compose.yaml --project-name locg_"$ENVIRONMENT" rm -f -s
+    docker compose -f ~/locg/deploy/docker-compose.yaml --project-name locg_"$ENVIRONMENT" rm -f -s
     
     docker network prune -f
     docker image prune -a -f
@@ -41,14 +41,12 @@ function locg_deploy() {
     REDIS_PORT=$(get_available_port)
     NATS_PORT=$(get_available_port)
     
-    echo "Sleeping for 10 seconds…"
-    sleep 10
     
     # shellcheck disable=SC2143
     if [[ $(docker ps -a | grep locg_"${BUILD_ENVIRONMENT}"_service_1) ]]; then
         echo "BUILD_Environment already exists. Deploying with saving the last ports."
-        # SERVICE_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"8080/tcp\") 0) \"HostPort\"}}" locg_"${BUILD_ENVIRONMENT}"_service_1)
-        # REST_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"8080/tcp\") 0) \"HostPort\"}}" locg_"${BUILD_ENVIRONMENT}"_rest-api_1)
+        SERVICE_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"8080/tcp\") 0) \"HostPort\"}}" locg_"${BUILD_ENVIRONMENT}"_service_1)
+        REST_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"8080/tcp\") 0) \"HostPort\"}}" locg_"${BUILD_ENVIRONMENT}"_rest-api_1)
         REDIS_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"6379/tcp\") 0) \"HostPort\"}}" locg_"${BUILD_ENVIRONMENT}"_redis_1)
         NATS_PORT=$(docker inspect --format "{{index (index (index .NetworkSettings.Ports \"4222/tcp\") 0) \"HostPort\"}}" locg_"${BUILD_ENVIRONMENT}"_nats_1)
         
@@ -60,7 +58,7 @@ function locg_deploy() {
         fi
         
         if [[ "$REST_PORT" =~ ^[0-9]+$ ]]; then
-            echo "REST API port: OK"
+            echo "MongoDB port: OK"
         else
             echo "Unable get Rest API port: $REST_PORT"
             REST_PORT=$(get_available_port)
@@ -88,10 +86,10 @@ function locg_deploy() {
     docker network create internal_${BUILD_ENVIRONMENT}
     
     echo "Pulling..."
-    docker-compose -f ~/locg/deploy/docker-compose.yaml --project-name locg_"$BUILD_ENVIRONMENT" pull
+    docker compose -f ~/locg/deploy/docker-compose.yaml --project-name locg_"$BUILD_ENVIRONMENT" pull
     
     echo "Restarting..."
-    docker-compose -f ~/locg/deploy/docker-compose.yaml --project-name locg_"$BUILD_ENVIRONMENT" up -d
+    docker compose -f ~/locg/deploy/docker-compose.yaml --project-name locg_"$BUILD_ENVIRONMENT" up -d
     
     echo "Done"
 }

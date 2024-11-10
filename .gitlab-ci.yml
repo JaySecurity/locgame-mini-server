@@ -64,7 +64,7 @@ docker-build:
     - schedules
     - test-feature-branch
 
-deploy-dev:
+deploy-EC2:
   stage: deploy
   image: kroniak/ssh-client
   script:
@@ -120,4 +120,3 @@ stop_environment:
     - tags
     - schedules
   when: manual
-
